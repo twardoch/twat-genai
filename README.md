@@ -1,5 +1,7 @@
 # twat-genai
 
+(work in progress)
+
 Image generation package that leverages fal.ai's models for AI image generation. Provides a flexible command-line interface and Python API for generating images using various AI models and techniques.
 
 ## Features
