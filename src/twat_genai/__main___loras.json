@@ -1,0 +1,62 @@
+{
+  "gstdrw style": [
+    {
+      "url": "glif/Gesture-Draw",
+      "scale": 1.0
+    }
+  ],
+  "Sketch Smudge": [
+    {
+      "url": "strangerzonehf/Flux-Sketch-Smudge-LoRA",
+      "scale": 1.0
+    }
+  ],
+  "2color illustration": [
+    {
+      "url": "strangerzonehf/2Color-Illustration",
+      "scale": 1.2
+    }
+  ],
+  "shou_xin": [
+    {
+      "url": "hassanelmghari/shou_xin",
+      "scale": 1.0
+    }
+  ],
+  "shou_xin, Simple Pencil sketch": [
+    {
+      "url": "hassanelmghari/shou_xin",
+      "scale": 0.8
+    },
+    {
+      "url": "prithivMLmods/Super-Pencil-Flux-LoRA",
+      "scale": 1.2
+    }
+  ],
+  "shou_xin, gstdrw style sketch": [
+    {
+      "url": "hassanelmghari/shou_xin",
+      "scale": 2.0
+    },
+    {
+      "url": "glif/Gesture-Draw",
+      "scale": 0.4
+    }
+  ],
+  "in the style of TOK a trtcrd tarot style": [
+    {
+      "url": "multimodalart/flux-tarot-v1",
+      "scale": 1.0
+    }
+  ],
+  "shou_xin, Sketch Smudge": [
+    {
+      "url": "hassanelmghari/shou_xin",
+      "scale": 1.0
+    },
+    {
+      "url": "strangerzonehf/Flux-Sketch-Smudge-LoRA",
+      "scale": 0.5
+    }
+  ]
+}
