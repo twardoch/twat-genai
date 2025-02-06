@@ -4,10 +4,8 @@
 # ///
 """Prompt handling and expansion utilities for twat-genai."""
 
-from typing import List
 
-
-def split_top_level(s: str, delimiter: str = ";") -> List[str]:
+def split_top_level(s: str, delimiter: str = ";") -> list[str]:
     """
     Split a string by the given delimiter only at the top level (i.e. not inside braces).
 
@@ -35,7 +33,7 @@ def split_top_level(s: str, delimiter: str = ";") -> List[str]:
     return [part.strip() for part in parts if part.strip()]
 
 
-def expand_prompts(s: str) -> List[str]:
+def expand_prompts(s: str) -> list[str]:
     """
     Recursively expand a prompt string with alternatives inside braces.
 
@@ -68,7 +66,8 @@ def expand_prompts(s: str) -> List[str]:
                 break
 
     if close_index == -1:
-        raise ValueError("Unbalanced braces in prompt string.")
+        msg = "Unbalanced braces in prompt string."
+        raise ValueError(msg)
 
     prefix = s[:open_index]
     brace_content = s[open_index + 1 : close_index]
@@ -85,7 +84,7 @@ def expand_prompts(s: str) -> List[str]:
     return expanded
 
 
-def normalize_prompts(prompts: str | List[str]) -> List[str]:
+def normalize_prompts(prompts: str | list[str]) -> list[str]:
     """
     Normalize and expand a prompt or list of prompts.
 
@@ -100,7 +99,7 @@ def normalize_prompts(prompts: str | List[str]) -> List[str]:
     else:
         raw_prompts = prompts
 
-    final_prompts: List[str] = []
+    final_prompts: list[str] = []
     for raw in raw_prompts:
         final_prompts.extend(expand_prompts(raw.strip()))
 

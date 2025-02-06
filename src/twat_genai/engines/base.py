@@ -5,11 +5,11 @@
 """Base interface for image generation engines."""
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pydantic import BaseModel
 
-from ..core.config import ImageResult, ImageSizeWH, JsonDict
+from ..core.config import ImageResult, ImageSizeWH
 from ..core.image import ImageSizes
 
 

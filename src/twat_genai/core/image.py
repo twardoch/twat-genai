@@ -6,7 +6,6 @@
 
 from enum import Enum
 from pathlib import Path
-from typing import Optional
 
 from PIL import Image
 

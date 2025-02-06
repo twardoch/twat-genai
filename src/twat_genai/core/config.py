@@ -5,7 +5,7 @@
 """Core configuration models and type definitions for twat-genai."""
 
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any, Optional
 
 from PIL import Image
 from pydantic import BaseModel
@@ -30,9 +30,9 @@ class ImageSizeWH(BaseModel):
 class ImageInput(BaseModel):
     """Represents an image input that can be a URL, file path, or PIL Image."""
 
-    url: Optional[str] = None
-    path: Optional[Path] = None
-    pil_image: Optional[Image.Image] = None
+    url: str | None = None
+    path: Path | None = None
+    pil_image: Image.Image | None = None
 
     model_config = {"arbitrary_types_allowed": True}
 
@@ -51,8 +51,8 @@ class ImageResult(BaseModel):
     timestamp: str
     result: JsonDict
     image_info: dict[str, Any]
-    image: Optional[Image.Image] = None
-    original_prompt: Optional[str] = None
-    job_params: Optional[dict[str, Any]] = None
+    image: Image.Image | None = None
+    original_prompt: str | None = None
+    job_params: dict[str, Any] | None = None
 
     model_config = {"arbitrary_types_allowed": True}

@@ -12,18 +12,18 @@ from .engines.fal import FALEngine
 from .engines.fal.config import ImageToImageConfig, ModelTypes
 
 __all__ = [
-    "cli",
+    "EngineConfig",
+    "FALEngine",
+    "ImageFormats",
+    "ImageGenerationEngine",
     "ImageInput",
     "ImageResult",
     "ImageSizeWH",
-    "ImageFormats",
     "ImageSizes",
-    "expand_prompts",
-    "normalize_prompts",
-    "EngineConfig",
-    "ImageGenerationEngine",
-    "FALEngine",
     "ImageToImageConfig",
     "ModelTypes",
     "__version__",
+    "cli",
+    "expand_prompts",
+    "normalize_prompts",
 ]

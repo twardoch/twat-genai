@@ -7,7 +7,6 @@
 import asyncio
 import sys
 from pathlib import Path
-from typing import Any, List, Optional, Union
 
 import fire
 from loguru import logger
@@ -31,16 +30,14 @@ def parse_image_size(size_str: str) -> ImageSizes | ImageSizeWH:
                 w, h = (int(x.strip()) for x in size_str.split(",", 1))
                 return ImageSizeWH(width=w, height=h)
             except (ValueError, TypeError) as err:
-                raise ValueError(
-                    "For custom image sizes use 'width,height' with integers."
-                ) from err
+                msg = "For custom image sizes use 'width,height' with integers."
+                raise ValueError(msg) from err
         valid_names = ", ".join(s.name for s in ImageSizes)
-        raise ValueError(
-            f"image_size must be one of: {valid_names} or in 'width,height' format."
-        )
+        msg = f"image_size must be one of: {valid_names} or in 'width,height' format."
+        raise ValueError(msg)
 
 
-def get_output_dir(user_dir: Optional[Union[str, Path]] = None) -> Path:
+def get_output_dir(user_dir: str | Path | None = None) -> Path:
     """Get the output directory for generated images.
 
     Priority:
@@ -59,17 +56,17 @@ def get_output_dir(user_dir: Optional[Union[str, Path]] = None) -> Path:
 
 
 async def async_main(
-    prompts: Union[str, List[str]],
-    output_dir: Union[str, Path] = "generated_images",
-    filename_suffix: Optional[str] = None,
-    filename_prefix: Optional[str] = None,
+    prompts: str | list[str],
+    output_dir: str | Path = "generated_images",
+    filename_suffix: str | None = None,
+    filename_prefix: str | None = None,
     model: ModelTypes = ModelTypes.TEXT,
-    image_config: Optional[ImageToImageConfig] = None,
-    lora: Union[str, List, None] = None,
+    image_config: ImageToImageConfig | None = None,
+    lora: str | list | None = None,
     image_size: str = "SQ",
     guidance_scale: float = 3.5,
     num_inference_steps: int = 28,
-) -> List[ImageResult]:
+) -> list[ImageResult]:
     """
     Generate images using FAL.
 
@@ -118,21 +115,21 @@ async def async_main(
 
 
 def cli(
-    prompts: Union[str, List[str]],
-    output_dir: Union[str, Path] = "generated_images",
-    filename_suffix: Optional[str] = None,
-    filename_prefix: Optional[str] = None,
-    model: Union[str, ModelTypes] = "text",
-    input_image: Union[str, Path, None] = None,
-    image_url: Union[str, None] = None,
+    prompts: str | list[str],
+    output_dir: str | Path = "generated_images",
+    filename_suffix: str | None = None,
+    filename_prefix: str | None = None,
+    model: str | ModelTypes = "text",
+    input_image: str | Path | None = None,
+    image_url: str | None = None,
     strength: float = 0.75,
     negative_prompt: str = "",
-    lora: Union[str, List, None] = None,
+    lora: str | list | None = None,
     image_size: str = "SQ",
     guidance_scale: float = 3.5,
     num_inference_steps: int = 28,
     verbose: bool = False,
-) -> List[ImageResult]:
+) -> list[ImageResult]:
     """
     CLI entry point for image generation.
 
@@ -163,14 +160,14 @@ def cli(
             model = ModelTypes[model.upper()]
         except KeyError:
             valid_models = ", ".join(m.name.lower() for m in ModelTypes)
-            raise ValueError(f"Invalid model type. Must be one of: {valid_models}")
+            msg = f"Invalid model type. Must be one of: {valid_models}"
+            raise ValueError(msg)
 
     image_config = None
     if model != ModelTypes.TEXT:
         if not (input_image or image_url):
-            raise ValueError(
-                "input_image or image_url is required for image-to-image operations"
-            )
+            msg = "input_image or image_url is required for image-to-image operations"
+            raise ValueError(msg)
         image_config = ImageToImageConfig(
             model_type=model,
             input_image=ImageInput(

@@ -5,18 +5,16 @@
 """FAL API client and request handling."""
 
 import asyncio
-import tempfile
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 import fal_client
 import httpx
 from loguru import logger
 
 from ...core.config import ImageResult
-from ...core.image import ImageFormats, save_image
-from .config import FALJobConfig, ModelTypes
+from .config import FALJobConfig
 
 
 async def submit_job(job: FALJobConfig) -> str:
@@ -52,11 +50,11 @@ async def download_image(url: str, output_path: Path) -> None:
 
 async def get_result(
     request_id: str,
-    output_dir: Optional[Path] = None,
-    filename_suffix: Optional[str] = None,
-    filename_prefix: Optional[str] = None,
-    original_prompt: Optional[str] = None,
-    job_params: Optional[Dict[str, Any]] = None,
+    output_dir: Path | None = None,
+    filename_suffix: str | None = None,
+    filename_prefix: str | None = None,
+    original_prompt: str | None = None,
+    job_params: dict[str, Any] | None = None,
 ) -> ImageResult:
     """
     Retrieve and process the result of a submitted job.

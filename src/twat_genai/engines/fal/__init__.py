@@ -22,7 +22,7 @@ load_dotenv()
 class FALEngine(ImageGenerationEngine):
     """FAL image generation engine implementation."""
 
-    def __init__(self, output_dir: Optional[Path] = None) -> None:
+    def __init__(self, output_dir: Path | None = None) -> None:
         """
         Initialize the FAL engine.
 
@@ -35,9 +35,8 @@ class FALEngine(ImageGenerationEngine):
     async def initialize(self) -> None:
         """Initialize the engine and verify API key."""
         if not self.api_key:
-            raise ValueError(
-                "FAL_KEY environment variable not set. Please set it with your FAL API key."
-            )
+            msg = "FAL_KEY environment variable not set. Please set it with your FAL API key."
+            raise ValueError(msg)
 
     async def generate(
         self,

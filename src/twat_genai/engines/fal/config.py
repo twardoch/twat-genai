@@ -6,7 +6,7 @@
 
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Union
 
 from pydantic import BaseModel, RootModel
 
@@ -38,13 +38,13 @@ class LoraRecord(BaseModel):
     scale: float = 1.0
 
 
-class LoraRecordList(RootModel[List[LoraRecord]]):
+class LoraRecordList(RootModel[list[LoraRecord]]):
     """List of LoRA records."""
 
     pass
 
 
-class LoraLib(RootModel[Dict[str, LoraRecordList]]):
+class LoraLib(RootModel[dict[str, LoraRecordList]]):
     """Library of LoRA configurations."""
 
     pass
@@ -61,8 +61,8 @@ class LoraSpecEntry(BaseModel):
 class CombinedLoraSpecEntry(BaseModel):
     """Combined specification of multiple LoRA entries."""
 
-    entries: List[Union[LoraSpecEntry, "CombinedLoraSpecEntry"]]
-    factory_key: Optional[str] = None
+    entries: list[Union[LoraSpecEntry, "CombinedLoraSpecEntry"]]
+    factory_key: str | None = None
 
 
 class FALJobConfig(BaseModel):
@@ -71,13 +71,13 @@ class FALJobConfig(BaseModel):
     prompt: str
     original_prompt: str
     model: ModelTypes = ModelTypes.TEXT
-    lora_spec: Union[str, List, tuple, None] = None
-    output_dir: Optional[Path] = None
-    filename_suffix: Optional[str] = None
-    filename_prefix: Optional[str] = None
-    image_config: Optional[ImageToImageConfig] = None
+    lora_spec: str | list | tuple | None = None
+    output_dir: Path | None = None
+    filename_suffix: str | None = None
+    filename_prefix: str | None = None
+    image_config: ImageToImageConfig | None = None
 
-    async def to_fal_arguments(self) -> Dict[str, Any]:
+    async def to_fal_arguments(self) -> dict[str, Any]:
         """Convert job config to FAL API arguments."""
         from .lora import build_lora_arguments  # Avoid circular import
 

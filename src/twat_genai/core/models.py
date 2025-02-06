@@ -50,13 +50,13 @@ class ImageResult(BaseModel):
     timestamp: str
     result: dict[str, Any]
     image_info: dict[str, Any]
-    image: Optional[Image.Image] = None
-    original_prompt: Optional[str] = None
-    job_params: Optional[dict[str, Any]] = None
+    image: Image.Image | None = None
+    original_prompt: str | None = None
+    job_params: dict[str, Any] | None = None
 
     model_config = {"arbitrary_types_allowed": True}
 
 
 # Type aliases
 ImageSize = Union[ImageSizes, ImageSizeWH]
-OutputDir = Optional[Path] 
+OutputDir = Optional[Path]

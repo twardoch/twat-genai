@@ -8,7 +8,6 @@ Dependencies: fal-client, fire, python-dotenv, httpx, Pillow, pydantic, python-s
 """
 
 import asyncio
-import sys
 import tempfile
 from datetime import datetime
 from enum import Enum
@@ -43,9 +42,9 @@ class ModelTypes(str, Enum):
 class ImageInput(BaseModel):
     """Represents an image input that can be a URL, file path, or PIL Image."""
 
-    url: Optional[str] = None
-    path: Optional[Path] = None
-    pil_image: Optional[Image.Image] = None
+    url: str | None = None
+    path: Path | None = None
+    pil_image: Image.Image | None = None
 
     model_config = {"arbitrary_types_allowed": True}
 
@@ -59,7 +58,8 @@ class ImageInput(BaseModel):
     async def to_url(self) -> str:
         """Convert the image input to a URL that can be used by fal.ai."""
         if not self.is_valid:
-            raise ValueError("Exactly one of url, path, or pil_image must be provided")
+            msg = "Exactly one of url, path, or pil_image must be provided"
+            raise ValueError(msg)
         if self.url:
             return self.url
         if self.path:
@@ -69,7 +69,8 @@ class ImageInput(BaseModel):
                 tmp_path = Path(tmp.name)
                 self.pil_image.save(tmp_path, format="JPEG", quality=95)
                 return await fal_client.upload_file_async(tmp_path)
-        raise ValueError("No valid image input provided")
+        msg = "No valid image input provided"
+        raise ValueError(msg)
 
 
 class ImageToImageConfig(BaseModel):
@@ -157,9 +158,9 @@ class ImageResult(BaseModel):
     timestamp: str
     result: JsonDict
     image_info: dict[str, Any]
-    image: Optional[Image.Image] = None
-    original_prompt: Optional[str] = None
-    job_params: Optional[dict[str, Any]] = None
+    image: Image.Image | None = None
+    original_prompt: str | None = None
+    job_params: dict[str, Any] | None = None
 
     model_config = {"arbitrary_types_allowed": True}
 
@@ -179,10 +180,10 @@ class CombinedLoraSpecEntry(BaseModel):
     """Combined specification composed of multiple LoraSpecEntry items."""
 
     entries: list[Union[LoraSpecEntry, "CombinedLoraSpecEntry"]]
-    factory_key: Optional[str] = None  # Store the factory key if applicable
+    factory_key: str | None = None  # Store the factory key if applicable
 
 
-def parse_lora_phrase(phrase: str) -> Union[LoraSpecEntry, CombinedLoraSpecEntry]:
+def parse_lora_phrase(phrase: str) -> LoraSpecEntry | CombinedLoraSpecEntry:
     """
     Parse a Lora phrase which may include an optional scale.
     A phrase is either:
@@ -203,7 +204,8 @@ def parse_lora_phrase(phrase: str) -> Union[LoraSpecEntry, CombinedLoraSpecEntry
         try:
             scale = float(scale_str.strip())
         except ValueError:
-            raise ValueError(f"Invalid scale value in Lora phrase: {phrase}")
+            msg = f"Invalid scale value in Lora phrase: {phrase}"
+            raise ValueError(msg)
     else:
         identifier = phrase
         scale = 1.0
@@ -211,8 +213,8 @@ def parse_lora_phrase(phrase: str) -> Union[LoraSpecEntry, CombinedLoraSpecEntry
 
 
 def normalize_lora_spec(
-    spec: Union[str, list, tuple, None],
-) -> list[Union[LoraSpecEntry, CombinedLoraSpecEntry]]:
+    spec: str | list | tuple | None,
+) -> list[LoraSpecEntry | CombinedLoraSpecEntry]:
     """
     Normalize various Lora specification formats into a unified list.
     Supported formats:
@@ -224,7 +226,7 @@ def normalize_lora_spec(
     """
     if spec is None:
         return []
-    normalized: list[Union[LoraSpecEntry, CombinedLoraSpecEntry]] = []
+    normalized: list[LoraSpecEntry | CombinedLoraSpecEntry] = []
     match spec:
         case list() | tuple() as items:
             for item in items:
@@ -235,7 +237,8 @@ def normalize_lora_spec(
                         )
                     case dict() as d:
                         if "path" not in d:
-                            raise ValueError("Lora spec dictionary must have a 'path'.")
+                            msg = "Lora spec dictionary must have a 'path'."
+                            raise ValueError(msg)
                         normalized.append(
                             LoraSpecEntry(
                                 path=d["path"],
@@ -253,21 +256,21 @@ def normalize_lora_spec(
                         ]
                         normalized.append(CombinedLoraSpecEntry(entries=combined))
                     case _:
-                        raise ValueError(
-                            f"Unsupported Lora spec item type: {type(item)}"
-                        )
+                        msg = f"Unsupported Lora spec item type: {type(item)}"
+                        raise ValueError(msg)
         case str() as s:
             if s in LORA_LIB.root:
                 return [parse_lora_phrase(s)]
             phrases = [phrase.strip() for phrase in s.split(";") if phrase.strip()]
             return [parse_lora_phrase(phrase) for phrase in phrases]
         case _:
-            raise ValueError(f"Unsupported Lora spec type: {type(spec)}")
+            msg = f"Unsupported Lora spec type: {type(spec)}"
+            raise ValueError(msg)
     return normalized
 
 
 def build_lora_arguments(
-    lora_spec: Union[str, list, tuple, None], prompt: str
+    lora_spec: str | list | tuple | None, prompt: str
 ) -> tuple[list[dict[str, Any]], str]:
     """
     Build the list of inference Lora dictionaries and a final prompt.
@@ -278,7 +281,7 @@ def build_lora_arguments(
     lora_list: list[dict[str, Any]] = []
     prompt_prefixes: list[str] = []
 
-    def process_entry(entry: Union[LoraSpecEntry, CombinedLoraSpecEntry]) -> None:
+    def process_entry(entry: LoraSpecEntry | CombinedLoraSpecEntry) -> None:
         if isinstance(entry, LoraSpecEntry):
             lora_list.append({"path": entry.path, "scale": entry.scale})
             if entry.prompt:
@@ -338,7 +341,8 @@ def expand_prompts(s: str) -> list[str]:
                 close_index = i
                 break
     if close_index == -1:
-        raise ValueError("Unbalanced braces in prompt string.")
+        msg = "Unbalanced braces in prompt string."
+        raise ValueError(msg)
     prefix = s[:open_index]
     brace_content = s[open_index + 1 : close_index]
     suffix = s[close_index + 1 :]
@@ -363,16 +367,14 @@ class TTIJobConfig(BaseModel):
     prompt: str
     original_prompt: str  # Store the original user prompt before Lora modifications
     model: ModelTypes = ModelTypes.TEXT
-    lora_spec: Union[str, list, tuple, None] = None
+    lora_spec: str | list | tuple | None = None
     output_dir: OutputDir
     image_size: ImageSize
     guidance_scale: GuidanceScale
     num_inference_steps: NumInferenceSteps
-    filename_suffix: Optional[str] = None
-    filename_prefix: Optional[str] = None
-    image_config: Optional[ImageToImageConfig] = (
-        None  # Only for image-to-image operations
-    )
+    filename_suffix: str | None = None
+    filename_prefix: str | None = None
+    image_config: ImageToImageConfig | None = None  # Only for image-to-image operations
 
     async def to_fal_arguments(self) -> dict[str, Any]:
         """Convert the job config into a dictionary for fal-client."""
@@ -433,10 +435,10 @@ async def download_image(url: URLStr, output_path: Path) -> None:
 async def get_result(
     request_id: RequestID,
     output_dir: OutputDir = None,
-    filename_suffix: Optional[str] = None,
-    filename_prefix: Optional[str] = None,
-    original_prompt: Optional[str] = None,
-    job_params: Optional[dict[str, Any]] = None,
+    filename_suffix: str | None = None,
+    filename_prefix: str | None = None,
+    original_prompt: str | None = None,
+    job_params: dict[str, Any] | None = None,
 ) -> ImageResult:
     """
     Retrieve and process the result of a submitted job.
@@ -531,14 +533,10 @@ async def process_single_job(job: TTIJobConfig) -> ImageResult:
     suffix_parts = []
     if job.filename_suffix:
         suffix_parts.append(job.filename_suffix)
-    else:
-        if isinstance(job.lora_spec, str):
-            suffix_parts.append(job.lora_spec)
-        elif (
-            isinstance(job.lora_spec, CombinedLoraSpecEntry)
-            and job.lora_spec.factory_key
-        ):
-            suffix_parts.append(slugify(job.lora_spec.factory_key)[:8])
+    elif isinstance(job.lora_spec, str):
+        suffix_parts.append(job.lora_spec)
+    elif isinstance(job.lora_spec, CombinedLoraSpecEntry) and job.lora_spec.factory_key:
+        suffix_parts.append(slugify(job.lora_spec.factory_key)[:8])
     combined_suffix = "_".join(suffix_parts) if suffix_parts else None
 
     # Collect job parameters for metadata
@@ -565,13 +563,13 @@ async def process_single_job(job: TTIJobConfig) -> ImageResult:
 
 
 async def async_main(
-    prompts: Union[str, list[str]],
-    output_dir: Union[str, Path] = "generated_images",
-    filename_suffix: Optional[str] = None,
-    filename_prefix: Optional[str] = None,
+    prompts: str | list[str],
+    output_dir: str | Path = "generated_images",
+    filename_suffix: str | None = None,
+    filename_prefix: str | None = None,
     model: ModelTypes = ModelTypes.TEXT,
-    image_config: Optional[ImageToImageConfig] = None,
-    lora: Union[str, list, None] = None,
+    image_config: ImageToImageConfig | None = None,
+    lora: str | list | None = None,
     image_size: str = "SQ",
     guidance_scale: float = 3.5,
     num_inference_steps: int = 28,
@@ -593,9 +591,11 @@ async def async_main(
     """
     if model != ModelTypes.TEXT:
         if not image_config:
-            raise ValueError("image_config is required for image-to-image operations")
+            msg = "image_config is required for image-to-image operations"
+            raise ValueError(msg)
         if image_config.model_type != model:
-            raise ValueError("image_config.model_type must match the model parameter")
+            msg = "image_config.model_type must match the model parameter"
+            raise ValueError(msg)
     if isinstance(prompts, str):
         raw_prompts = split_top_level(prompts, delimiter=";")
     else:
@@ -616,14 +616,14 @@ async def async_main(
                 w, h = (int(x.strip()) for x in image_size.split(",", 1))
                 size = ImageSizeWH(width=w, height=h)
             except (ValueError, TypeError) as err:
-                raise ValueError(
-                    "For custom image sizes use 'width,height' with integers."
-                ) from err
+                msg = "For custom image sizes use 'width,height' with integers."
+                raise ValueError(msg) from err
         else:
             valid_names = ", ".join(s.name for s in ImageSizes)
-            raise ValueError(
+            msg = (
                 f"image_size must be one of: {valid_names} or in 'width,height' format."
             )
+            raise ValueError(msg)
     output_dir_path = Path(output_dir)
     output_dir_path.mkdir(parents=True, exist_ok=True)
     jobs: list[TTIJobConfig] = []

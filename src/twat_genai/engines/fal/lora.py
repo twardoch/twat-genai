@@ -5,7 +5,6 @@
 """LoRA handling and processing utilities."""
 
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
 
 from loguru import logger
 from twat.paths import PathManager
@@ -13,8 +12,6 @@ from twat.paths import PathManager
 from .config import (
     CombinedLoraSpecEntry,
     LoraLib,
-    LoraRecord,
-    LoraRecordList,
     LoraSpecEntry,
 )
 
@@ -52,7 +49,7 @@ def get_lora_lib() -> LoraLib:
 LORA_LIB = get_lora_lib()
 
 
-def parse_lora_phrase(phrase: str) -> Union[LoraSpecEntry, CombinedLoraSpecEntry]:
+def parse_lora_phrase(phrase: str) -> LoraSpecEntry | CombinedLoraSpecEntry:
     """
     Parse a LoRA phrase which may include an optional scale.
 
@@ -84,7 +81,8 @@ def parse_lora_phrase(phrase: str) -> Union[LoraSpecEntry, CombinedLoraSpecEntry
         try:
             scale = float(scale_str.strip())
         except ValueError:
-            raise ValueError(f"Invalid scale value in LoRA phrase: {phrase}")
+            msg = f"Invalid scale value in LoRA phrase: {phrase}"
+            raise ValueError(msg)
     else:
         identifier = phrase
         scale = 1.0
@@ -93,8 +91,8 @@ def parse_lora_phrase(phrase: str) -> Union[LoraSpecEntry, CombinedLoraSpecEntry
 
 
 def normalize_lora_spec(
-    spec: Union[str, List, tuple, None],
-) -> List[Union[LoraSpecEntry, CombinedLoraSpecEntry]]:
+    spec: str | list | tuple | None,
+) -> list[LoraSpecEntry | CombinedLoraSpecEntry]:
     """
     Normalize various LoRA specification formats into a unified list.
 
@@ -110,7 +108,7 @@ def normalize_lora_spec(
     if spec is None:
         return []
 
-    normalized: List[Union[LoraSpecEntry, CombinedLoraSpecEntry]] = []
+    normalized: list[LoraSpecEntry | CombinedLoraSpecEntry] = []
 
     match spec:
         case list() | tuple() as items:
@@ -122,7 +120,8 @@ def normalize_lora_spec(
                         )
                     case dict() as d:
                         if "path" not in d:
-                            raise ValueError("LoRA spec dictionary must have a 'path'.")
+                            msg = "LoRA spec dictionary must have a 'path'."
+                            raise ValueError(msg)
                         normalized.append(
                             LoraSpecEntry(
                                 path=d["path"],
@@ -140,23 +139,23 @@ def normalize_lora_spec(
                         ]
                         normalized.append(CombinedLoraSpecEntry(entries=combined))
                     case _:
-                        raise ValueError(
-                            f"Unsupported LoRA spec item type: {type(item)}"
-                        )
+                        msg = f"Unsupported LoRA spec item type: {type(item)}"
+                        raise ValueError(msg)
         case str() as s:
             if s in LORA_LIB.root:
                 return [parse_lora_phrase(s)]
             phrases = [phrase.strip() for phrase in s.split(";") if phrase.strip()]
             return [parse_lora_phrase(phrase) for phrase in phrases]
         case _:
-            raise ValueError(f"Unsupported LoRA spec type: {type(spec)}")
+            msg = f"Unsupported LoRA spec type: {type(spec)}"
+            raise ValueError(msg)
 
     return normalized
 
 
 async def build_lora_arguments(
-    lora_spec: Union[str, List, tuple, None], prompt: str
-) -> Tuple[List[Dict[str, Union[str, float]]], str]:
+    lora_spec: str | list | tuple | None, prompt: str
+) -> tuple[list[dict[str, str | float]], str]:
     """
     Build the list of inference LoRA dictionaries and a final prompt.
 
@@ -168,10 +167,10 @@ async def build_lora_arguments(
         Tuple of (LoRA argument list, final prompt)
     """
     entries = normalize_lora_spec(lora_spec)
-    lora_list: List[Dict[str, Union[str, float]]] = []
-    prompt_prefixes: List[str] = []
+    lora_list: list[dict[str, str | float]] = []
+    prompt_prefixes: list[str] = []
 
-    def process_entry(entry: Union[LoraSpecEntry, CombinedLoraSpecEntry]) -> None:
+    def process_entry(entry: LoraSpecEntry | CombinedLoraSpecEntry) -> None:
         if isinstance(entry, LoraSpecEntry):
             lora_list.append({"path": entry.path, "scale": entry.scale})
             if entry.prompt:
