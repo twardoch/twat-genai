@@ -36,8 +36,8 @@ dependencies = [
     "pydantic>=2.0.0",
     "python-dotenv>=1.0.1",
     "python-slugify>=8.0.4",
-    "twat>=0.0.1",
-    #"twat-image>=0.0.1",
+    "twat>=1.0.0",
+    "twat-image>=1.0.0",
     "webcolors>=24.11.1",
 ]
 
