@@ -3,6 +3,7 @@
 # dependencies = ["fal-client", "python-dotenv"]
 # ///
 """FAL image generation engine implementation."""
+
 from __future__ import annotations
 
 import os

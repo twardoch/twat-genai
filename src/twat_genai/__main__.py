@@ -6,6 +6,7 @@
 Script for asynchronous image generation using fal-ai.
 Dependencies: fal-client, fire, python-dotenv, httpx, Pillow, pydantic, python-slugify, rich, loguru
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -135,10 +136,8 @@ class LoraRecordList(RootModel[list[LoraRecord]]):
     """A list of LoraRecord models."""
 
 
-
 class LoraLib(RootModel[dict[str, LoraRecordList]]):
     """A dictionary where the key is the prompt portion and the value is a LoraRecordList."""
-
 
 
 # --- Global Lora Library ---
@@ -597,7 +596,9 @@ async def async_main(
         if image_config.model_type != model:
             msg = "image_config.model_type must match the model parameter"
             raise ValueError(msg)
-    raw_prompts = split_top_level(prompts, delimiter=";") if isinstance(prompts, str) else prompts
+    raw_prompts = (
+        split_top_level(prompts, delimiter=";") if isinstance(prompts, str) else prompts
+    )
     final_prompts: list[str] = []
     for raw in raw_prompts:
         final_prompts.extend(expand_prompts(raw.strip()))

@@ -3,6 +3,7 @@
 # dependencies = ["pydantic", "Pillow"]
 # ///
 """Core configuration models and type definitions for twat-genai."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -52,9 +53,7 @@ class ImageInput(BaseModel):
         This is an abstract method that should be implemented by specific engine handlers.
         """
         msg = "to_url() must be implemented by a specific engine handler"
-        raise NotImplementedError(
-            msg
-        )
+        raise NotImplementedError(msg)
 
 
 class ImageResult(BaseModel):

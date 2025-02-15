@@ -28,13 +28,10 @@ classifiers = [
 
 dependencies = [
     "fal-client>=0.5.8",
-    "fire>=0.7.0",
     "httpx>=0.28.1",
-    "loguru>=0.7.3",
     "numpy>=2",
     "Pillow>=11.1.0",
     "pydantic>=2.0.0",
-    "python-dotenv>=1.0.1",
     "python-slugify>=8.0.4",
     "twat>=1.0.0",
     "twat-image>=1.0.0",
@@ -199,13 +196,15 @@ dev = [
 ]
 
 all = [
-    "pre-commit>=3.6.0",
-    "ruff>=0.1.0",
-    "mypy>=1.0.0",
-    "pytest>=7.0.0",
-    "pytest-cov>=4.0.0",
-    "pytest-xdist>=3.5.0",
-    "pytest-benchmark[histogram]>=4.0.0",
+    "fal-client>=0.5.8",
+    "httpx>=0.28.1",
+    "numpy>=2",
+    "Pillow>=11.1.0",
+    "pydantic>=2.0.0",
+    "python-slugify>=8.0.4",
+    "twat>=1.0.0",
+    "twat-image>=1.0.0",
+    "webcolors>=24.11.1",
 ]
 
 [tool.hatch.envs.test]

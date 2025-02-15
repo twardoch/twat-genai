@@ -3,6 +3,7 @@
 # dependencies = ["fire", "loguru"]
 # ///
 """Command-line interface for twat-genai."""
+
 from __future__ import annotations
 
 import asyncio

@@ -12,6 +12,7 @@ This module provides functionality to parse and process Midjourney-style prompts
 - Permutation prompts (using {} for alternatives)
 - Parameter handling (--param value)
 """
+
 from __future__ import annotations
 
 from loguru import logger
@@ -266,7 +267,9 @@ def parse_prompt(prompt: str) -> MidjourneyPrompt:
 
 def normalize_prompts(prompts: str | list[str]) -> list[str]:
     """Normalize and expand a prompt or list of prompts."""
-    raw_prompts = split_top_level(prompts, delimiter=";") if isinstance(prompts, str) else prompts
+    raw_prompts = (
+        split_top_level(prompts, delimiter=";") if isinstance(prompts, str) else prompts
+    )
 
     final_prompts = []
     for raw in raw_prompts:

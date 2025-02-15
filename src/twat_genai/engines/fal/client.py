@@ -3,6 +3,7 @@
 # dependencies = ["fal-client", "loguru", "httpx"]
 # ///
 """FAL API client and request handling."""
+
 from __future__ import annotations
 
 import asyncio

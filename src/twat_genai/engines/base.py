@@ -3,6 +3,7 @@
 # dependencies = ["pydantic"]
 # ///
 """Base interface for image generation engines."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod

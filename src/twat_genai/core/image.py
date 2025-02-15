@@ -3,6 +3,7 @@
 # dependencies = ["Pillow"]
 # ///
 """Image handling and size definitions for twat-genai."""
+
 from __future__ import annotations
 
 from enum import Enum

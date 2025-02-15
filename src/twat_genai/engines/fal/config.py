@@ -3,6 +3,7 @@
 # dependencies = ["pydantic"]
 # ///
 """FAL-specific configuration and models."""
+
 from __future__ import annotations
 
 from enum import Enum
@@ -58,10 +59,8 @@ class LoraRecordList(RootModel[list[LoraRecord]]):
     """List of LoRA records."""
 
 
-
 class LoraLib(RootModel[dict[str, LoraRecordList]]):
     """Library of LoRA configurations."""
-
 
 
 class LoraSpecEntry(BaseModel):
