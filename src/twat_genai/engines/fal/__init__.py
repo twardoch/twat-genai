@@ -3,18 +3,23 @@
 # dependencies = ["fal-client", "python-dotenv"]
 # ///
 """FAL image generation engine implementation."""
+from __future__ import annotations
 
 import os
-from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
 from dotenv import load_dotenv
 from loguru import logger
 
-from ...core.config import ImageResult
+from fal.client import get_result, submit_job
+from fal.config import FALJobConfig, ImageToImageConfig, ModelTypes
+
 from ..base import EngineConfig, ImageGenerationEngine
-from .client import get_result, submit_job
-from .config import FALJobConfig, ImageToImageConfig, ModelTypes
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from ...core.config import ImageResult
 
 load_dotenv()
 
@@ -106,4 +111,4 @@ class FALEngine(ImageGenerationEngine):
 
     async def shutdown(self) -> None:
         """Clean up resources."""
-        pass  # No cleanup needed for FAL engine
+        # No cleanup needed for FAL engine

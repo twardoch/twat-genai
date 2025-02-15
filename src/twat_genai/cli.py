@@ -3,6 +3,7 @@
 # dependencies = ["fire", "loguru"]
 # ///
 """Command-line interface for twat-genai."""
+from __future__ import annotations
 
 import asyncio
 import sys
@@ -10,14 +11,14 @@ from pathlib import Path
 
 import fire
 from loguru import logger
-from twat.paths import PathManager
 
-from .core.config import ImageInput, ImageResult, ImageSizeWH
-from .core.image import ImageSizes
-from .core.prompt import normalize_prompts
-from .engines.base import EngineConfig
-from .engines.fal import FALEngine
-from .engines.fal.config import ImageToImageConfig, ModelTypes
+from twat.paths import PathManager
+from twat_genai.core.config import ImageInput, ImageResult, ImageSizeWH
+from twat_genai.core.image import ImageSizes
+from twat_genai.core.prompt import normalize_prompts
+from twat_genai.engines.base import EngineConfig
+from twat_genai.engines.fal import FALEngine
+from twat_genai.engines.fal.config import ImageToImageConfig, ModelTypes
 
 
 def parse_image_size(size_str: str) -> ImageSizes | ImageSizeWH:

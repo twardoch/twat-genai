@@ -3,18 +3,22 @@
 # dependencies = ["fal-client", "loguru", "httpx"]
 # ///
 """FAL API client and request handling."""
+from __future__ import annotations
 
 import asyncio
 from datetime import datetime
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import fal_client
 import httpx
 from loguru import logger
 
 from ...core.config import ImageResult
-from .config import FALJobConfig
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from fal.config import FALJobConfig
 
 
 async def submit_job(job: FALJobConfig) -> str:

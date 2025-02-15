@@ -1,11 +1,14 @@
 """Core data models for image generation."""
+from __future__ import annotations
 
 from enum import Enum
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import TYPE_CHECKING, Any, Optional, Union
 
-from PIL import Image
 from pydantic import BaseModel
+
+if TYPE_CHECKING:
+    from PIL import Image
 
 
 class ModelTypes(str, Enum):

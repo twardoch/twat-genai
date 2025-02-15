@@ -3,17 +3,14 @@
 # dependencies = ["pydantic"]
 # ///
 """LoRA handling and processing utilities."""
+from __future__ import annotations
 
 from pathlib import Path
 
 from loguru import logger
-from twat.paths import PathManager
 
-from .config import (
-    CombinedLoraSpecEntry,
-    LoraLib,
-    LoraSpecEntry,
-)
+from fal.config import CombinedLoraSpecEntry, LoraLib, LoraSpecEntry
+from twat.paths import PathManager
 
 
 def get_lora_lib() -> LoraLib:

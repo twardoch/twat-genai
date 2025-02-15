@@ -3,14 +3,19 @@
 # dependencies = ["pydantic"]
 # ///
 """FAL-specific configuration and models."""
+from __future__ import annotations
 
 from enum import Enum
-from pathlib import Path
-from typing import Any, Union
+from typing import TYPE_CHECKING, Any
 
-from pydantic import BaseModel, RootModel
+from pydantic import BaseModel, RootModel, model_validator
+
+from fal.models import FALImageInput
 
 from ...core.config import ImageInput
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 class ModelTypes(str, Enum):
@@ -26,9 +31,20 @@ class ImageToImageConfig(BaseModel):
     """Configuration for image-to-image operations."""
 
     model_type: ModelTypes
-    input_image: ImageInput
+    input_image: FALImageInput
     strength: float = 0.75  # Only used for standard image-to-image
     negative_prompt: str = ""
+
+    @model_validator(mode="before")
+    @classmethod
+    def convert_image_input(cls, data: Any) -> Any:
+        """Convert ImageInput to FALImageInput if needed."""
+        if isinstance(data, dict) and "input_image" in data:
+            if isinstance(data["input_image"], ImageInput) and not isinstance(
+                data["input_image"], FALImageInput
+            ):
+                data["input_image"] = FALImageInput.from_base(data["input_image"])
+        return data
 
 
 class LoraRecord(BaseModel):
@@ -41,13 +57,11 @@ class LoraRecord(BaseModel):
 class LoraRecordList(RootModel[list[LoraRecord]]):
     """List of LoRA records."""
 
-    pass
 
 
 class LoraLib(RootModel[dict[str, LoraRecordList]]):
     """Library of LoRA configurations."""
 
-    pass
 
 
 class LoraSpecEntry(BaseModel):
@@ -61,7 +75,7 @@ class LoraSpecEntry(BaseModel):
 class CombinedLoraSpecEntry(BaseModel):
     """Combined specification of multiple LoRA entries."""
 
-    entries: list[Union[LoraSpecEntry, "CombinedLoraSpecEntry"]]
+    entries: list[LoraSpecEntry | CombinedLoraSpecEntry]
     factory_key: str | None = None
 
 
@@ -79,7 +93,7 @@ class FALJobConfig(BaseModel):
 
     async def to_fal_arguments(self) -> dict[str, Any]:
         """Convert job config to FAL API arguments."""
-        from .lora import build_lora_arguments  # Avoid circular import
+        from fal.lora import build_lora_arguments  # Avoid circular import
 
         lora_list, final_prompt = await build_lora_arguments(
             self.lora_spec, self.prompt

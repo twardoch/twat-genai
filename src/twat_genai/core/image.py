@@ -3,11 +3,15 @@
 # dependencies = ["Pillow"]
 # ///
 """Image handling and size definitions for twat-genai."""
+from __future__ import annotations
 
 from enum import Enum
-from pathlib import Path
+from typing import TYPE_CHECKING
 
-from PIL import Image
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from PIL import Image
 
 
 class ImageSizes(str, Enum):

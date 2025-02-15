@@ -6,24 +6,27 @@
 Script for asynchronous image generation using fal-ai.
 Dependencies: fal-client, fire, python-dotenv, httpx, Pillow, pydantic, python-slugify, rich, loguru
 """
+from __future__ import annotations
 
 import asyncio
 import tempfile
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import TYPE_CHECKING, Any, Optional, Union
 
 import fal_client
 import fire
 import httpx
 from dotenv import load_dotenv
 from loguru import logger
-from PIL import Image
 from pydantic import BaseModel, RootModel
 from slugify import slugify
 
-from .cli import cli
+from twat_genai.cli import cli
+
+if TYPE_CHECKING:
+    from PIL import Image
 
 load_dotenv()
 
@@ -131,13 +134,11 @@ class LoraRecord(BaseModel):
 class LoraRecordList(RootModel[list[LoraRecord]]):
     """A list of LoraRecord models."""
 
-    pass
 
 
 class LoraLib(RootModel[dict[str, LoraRecordList]]):
     """A dictionary where the key is the prompt portion and the value is a LoraRecordList."""
 
-    pass
 
 
 # --- Global Lora Library ---
@@ -179,7 +180,7 @@ class LoraSpecEntry(BaseModel):
 class CombinedLoraSpecEntry(BaseModel):
     """Combined specification composed of multiple LoraSpecEntry items."""
 
-    entries: list[Union[LoraSpecEntry, "CombinedLoraSpecEntry"]]
+    entries: list[LoraSpecEntry | CombinedLoraSpecEntry]
     factory_key: str | None = None  # Store the factory key if applicable
 
 
@@ -596,10 +597,7 @@ async def async_main(
         if image_config.model_type != model:
             msg = "image_config.model_type must match the model parameter"
             raise ValueError(msg)
-    if isinstance(prompts, str):
-        raw_prompts = split_top_level(prompts, delimiter=";")
-    else:
-        raw_prompts = prompts
+    raw_prompts = split_top_level(prompts, delimiter=";") if isinstance(prompts, str) else prompts
     final_prompts: list[str] = []
     for raw in raw_prompts:
         final_prompts.extend(expand_prompts(raw.strip()))

@@ -3,14 +3,17 @@
 # dependencies = ["pydantic"]
 # ///
 """Base interface for image generation engines."""
+from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel
 
-from ..core.config import ImageResult, ImageSizeWH
 from ..core.image import ImageSizes
+
+if TYPE_CHECKING:
+    from ..core.config import ImageResult, ImageSizeWH
 
 
 class EngineConfig(BaseModel):
@@ -28,7 +31,6 @@ class ImageGenerationEngine(ABC):
     @abstractmethod
     async def initialize(self) -> None:
         """Initialize the engine and any required resources."""
-        pass
 
     @abstractmethod
     async def generate(
@@ -45,14 +47,12 @@ class ImageGenerationEngine(ABC):
         Returns:
             Generated image result
         """
-        pass
 
     @abstractmethod
     async def shutdown(self) -> None:
         """Clean up resources and shut down the engine."""
-        pass
 
-    async def __aenter__(self) -> "ImageGenerationEngine":
+    async def __aenter__(self) -> ImageGenerationEngine:
         """Context manager entry."""
         await self.initialize()
         return self
