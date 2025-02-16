@@ -1,6 +1,10 @@
 # this_file: twat_genai/pyproject.toml
 
-# Build system configuration
+# this_file: twat_genai/pyproject.toml
+
+# Build System Configuration
+# -------------------------
+# Specifies the build system and its requirements for packaging the project
 # Specifies the build backend and its requirements for building the package
 [build-system]
 requires = [
@@ -14,7 +18,9 @@ build-backend = "hatchling.build"  # Use Hatchling as the build backend
 [tool.hatch.build.targets.wheel]
 packages = ["src/twat_genai"]
 
-# Core project metadata
+# Project Metadata Configuration
+# ------------------------------
+# Comprehensive project description, requirements, and compatibility information
 [project]
 name = "twat-genai"
 dynamic = ["version"]  # Version is determined dynamically from VCS
@@ -33,7 +39,9 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: PyPy",
 ]
 
-# Core dependencies required for the package to function
+# Runtime Dependencies
+# -------------------
+# External packages required for the project to function
 dependencies = [
     "fal-client>=0.5.9",         # FAL.ai client for AI operations
     "httpx>=0.28.1",             # HTTP client library
@@ -46,18 +54,23 @@ dependencies = [
     "webcolors>=24.11.1",        # Color name and value conversion
 ]
 
-# Project author information
+# Project Authors
+# ---------------
 [[project.authors]]
 name = "Adam Twardoch"
 email = "adam+github@twardoch.com"
 
-# Project URLs for documentation and source code
+# Project URLs
+# ------------
+# Links to project resources for documentation, issues, and source code
 [project.urls]
 Documentation = "https://github.com/twardoch/twat-genai#readme"
 Issues = "https://github.com/twardoch/twat-genai/issues"
 Source = "https://github.com/twardoch/twat-genai"
 
-# Entry points for twat plugins
+# Twat Plugin Registration
+# -----------------------
+# Registers this package as a plugin for the twat ecosystem
 [project.entry-points."twat.plugins"]
 genai = "twat_genai"
 
