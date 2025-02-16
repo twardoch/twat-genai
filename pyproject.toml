@@ -1,19 +1,26 @@
+# this_file: twat_genai/pyproject.toml
+
+# Build system configuration
+# Specifies the build backend and its requirements for building the package
 [build-system]
 requires = [
-    "hatchling>=1.21.0",
-    "hatch-vcs>=0.3.0",
+    "hatchling>=1.27.0",     # Core build backend for Hatch
+    "hatch-vcs>=0.4.0",      # Version Control System plugin for Hatch
 ]
-build-backend = "hatchling.build"
+build-backend = "hatchling.build"  # Use Hatchling as the build backend
 
+# Wheel build configuration
+# Specifies which packages to include in the wheel distribution
 [tool.hatch.build.targets.wheel]
 packages = ["src/twat_genai"]
 
+# Core project metadata
 [project]
 name = "twat-genai"
-dynamic = ["version"]
+dynamic = ["version"]  # Version is determined dynamically from VCS
 description = ""
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.10"  # Minimum Python version required
 license = "MIT"
 keywords = []
 classifiers = [
@@ -26,125 +33,125 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: PyPy",
 ]
 
+# Core dependencies required for the package to function
 dependencies = [
-    "fal-client>=0.5.8",
-    "httpx>=0.28.1",
-    "numpy>=2",
-    "Pillow>=11.1.0",
-    "pydantic>=2.0.0",
-    "python-slugify>=8.0.4",
-    "twat>=1.0.0",
-    "twat-image>=1.0.0",
-    "webcolors>=24.11.1",
+    "fal-client>=0.5.9",         # FAL.ai client for AI operations
+    "httpx>=0.28.1",             # HTTP client library
+    "numpy>=2.2.3",              # Numerical computing library
+    "Pillow>=11.1.0",            # Image processing library
+    "pydantic>=2.10.6",          # Data validation using Python type annotations
+    "python-slugify>=8.0.4",     # Text slugification library
+    "twat>=1.8.1",               # Main twat package
+    "twat-image>=1.8.1",         # Image handling functionality
+    "webcolors>=24.11.1",        # Color name and value conversion
 ]
 
-
+# Project author information
 [[project.authors]]
 name = "Adam Twardoch"
 email = "adam+github@twardoch.com"
 
-
+# Project URLs for documentation and source code
 [project.urls]
 Documentation = "https://github.com/twardoch/twat-genai#readme"
 Issues = "https://github.com/twardoch/twat-genai/issues"
 Source = "https://github.com/twardoch/twat-genai"
 
-
+# Entry points for twat plugins
 [project.entry-points."twat.plugins"]
 genai = "twat_genai"
 
-
+# Version configuration using VCS (Git)
 [tool.hatch.version]
 source = "vcs"
 
 [tool.hatch.version.raw-options]
 version_scheme = "post-release"
 
+# VCS hook configuration for version file generation
 [tool.hatch.build.hooks.vcs]
 version-file = "src/twat_genai/__version__.py"
 
-
+# Default development environment configuration
 [tool.hatch.envs.default]
 dependencies = [
-    "pytest",
-    "pytest-cov",
-    "mypy>=1.0.0",
-    "ruff>=0.1.0",
-    "pytest>=7.0.0",
-    "pytest-cov>=4.0.0",
-    "ruff>=0.1.0",
-    "mypy>=1.0.0",
+    "pytest",                # Testing framework
+    "pytest-cov",           # Coverage reporting
+    "mypy>=1.15.0",         # Static type checker
+    "ruff>=0.9.6",          # Fast Python linter
 ]
 
-
-
+# Scripts available in the default environment
 [tool.hatch.envs.default.scripts]
 test = "pytest {args:tests}"
 test-cov = "pytest --cov-report=term-missing --cov-config=pyproject.toml --cov=src/twat_genai --cov=tests {args:tests}"
 type-check = "mypy src/twat_genai tests"
 lint = ["ruff check src/twat_genai tests", "ruff format src/twat_genai tests"]
 
-
+# Python version matrix for testing
 [[tool.hatch.envs.all.matrix]]
 python = ["3.10", "3.11", "3.12"]
 
-
+# Linting environment configuration
 [tool.hatch.envs.lint]
-detached = true
+detached = true  # Run in isolated environment
 dependencies = [
-    "mypy>=1.0.0",
-    "ruff>=0.1.0",
+    "mypy>=1.15.0",         # Static type checker
+    "ruff>=0.9.6",          # Fast Python linter
 ]
 
-
+# Linting environment scripts
 [tool.hatch.envs.lint.scripts]
 typing = "mypy --install-types --non-interactive {args:src/twat_genai tests}"
 style = ["ruff check {args:.}", "ruff format {args:.}"]
 fmt = ["ruff format {args:.}", "ruff check --fix {args:.}"]
 all = ["style", "typing"]
 
-
+# Ruff (linter) configuration
 [tool.ruff]
 target-version = "py310"
 line-length = 88
-lint.extend-select = [
-    "A",
-    "ARG",
-    "B",
-    "C",
-    "DTZ",
-    "E",
-    "EM",
-    "F",
-    "FBT",
-    "I",
-    "ICN",
-    "ISC",
-    "N",
-    "PLC",
-    "PLE",
-    "PLR",
-    "PLW",
-    "Q",
-    "RUF",
-    "S",
-    "T",
-    "TID",
-    "UP",
-    "W",
-    "YTT",
+
+# Ruff lint rules configuration
+[tool.ruff.lint]
+extend-select = [
+    "A",     # flake8-builtins
+    "ARG",   # flake8-unused-arguments
+    "B",     # flake8-bugbear
+    "C",     # flake8-comprehensions
+    "DTZ",   # flake8-datetimez
+    "E",     # pycodestyle errors
+    "EM",    # flake8-errmsg
+    "F",     # pyflakes
+    "FBT",   # flake8-boolean-trap
+    "I",     # isort
+    "ICN",   # flake8-import-conventions
+    "ISC",   # flake8-implicit-str-concat
+    "N",     # pep8-naming
+    "PLC",   # pylint convention
+    "PLE",   # pylint error
+    "PLR",   # pylint refactor
+    "PLW",   # pylint warning
+    "Q",     # flake8-quotes
+    "RUF",   # Ruff-specific rules
+    "S",     # flake8-bandit
+    "T",     # flake8-debugger
+    "TID",   # flake8-tidy-imports
+    "UP",    # pyupgrade
+    "W",     # pycodestyle warnings
+    "YTT",   # flake8-2020
 ]
-lint.ignore = [
+ignore = [
     "ARG001", # Unused function argument
     "E501",   # Line too long
-    "I001",
+    "I001",   # Import block formatting
 ]
 
-
+# File-specific Ruff configurations
 [tool.ruff.per-file-ignores]
-"tests/*" = ["S101"]
+"tests/*" = ["S101"]  # Allow assert in tests
 
-
+# MyPy (type checker) configuration
 [tool.mypy]
 python_version = "3.10"
 warn_return_any = true
@@ -159,7 +166,7 @@ warn_unused_ignores = true
 warn_no_return = true
 warn_unreachable = true
 
-
+# Coverage.py configuration for test coverage
 [tool.coverage.run]
 source_pkgs = ["twat_genai", "tests"]
 branch = true
@@ -168,54 +175,58 @@ omit = [
     "src/twat_genai/__about__.py",
 ]
 
-
+# Coverage path mappings
 [tool.coverage.paths]
 twat_genai = ["src/twat_genai", "*/twat-genai/src/twat_genai"]
 tests = ["tests", "*/twat-genai/tests"]
 
-
+# Coverage report configuration
 [tool.coverage.report]
 exclude_lines = [
     "no cov",
     "if __name__ == .__main__.:",
     "if TYPE_CHECKING:",
-] 
+]
 
+# Optional dependencies
 [project.optional-dependencies]
 test = [
-    "pytest>=7.0.0",
-    "pytest-cov>=4.0.0",
-    "pytest-xdist>=3.5.0",  # For parallel test execution
-    "pytest-benchmark[histogram]>=4.0.0",  # For performance testing
+    "pytest>=8.3.4",
+    "pytest-cov>=6.0.0",
+    "pytest-xdist>=3.6.1",                # For parallel test execution
+    "pytest-benchmark[histogram]>=5.1.0",  # For performance testing
 ]
 
 dev = [
-    "pre-commit>=3.6.0",
-    "ruff>=0.1.0",
-    "mypy>=1.0.0",
+    "pre-commit>=4.1.0",     # Git pre-commit hooks
+    "ruff>=0.9.6",           # Fast Python linter
+    "mypy>=1.15.0",          # Static type checker
 ]
 
 all = [
-    "fal-client>=0.5.8",
-    "httpx>=0.28.1",
-    "numpy>=2",
-    "Pillow>=11.1.0",
-    "pydantic>=2.0.0",
-    "python-slugify>=8.0.4",
-    "twat>=1.0.0",
-    "twat-image>=1.0.0",
-    "webcolors>=24.11.1",
+    "fal-client>=0.5.9",         # FAL.ai client
+    "httpx>=0.28.1",             # HTTP client
+    "numpy>=2.2.3",              # Numerical computing
+    "Pillow>=11.1.0",            # Image processing
+    "pydantic>=2.10.6",          # Data validation
+    "python-slugify>=8.0.4",     # Text slugification
+    "twat>=1.8.1",               # Main package
+    "twat-image>=1.8.1",         # Image handling
+    "webcolors>=24.11.1",        # Color utilities
 ]
 
+# Test environment configuration
 [tool.hatch.envs.test]
 dependencies = [".[test]"]
 
+# Test environment scripts
 [tool.hatch.envs.test.scripts]
 test = "python -m pytest -n auto {args:tests}"
 test-cov = "python -m pytest -n auto --cov-report=term-missing --cov-config=pyproject.toml --cov=src/twat_genai --cov=tests {args:tests}"
 bench = "python -m pytest -v -p no:briefcase tests/test_benchmark.py --benchmark-only"
 bench-save = "python -m pytest -v -p no:briefcase tests/test_benchmark.py --benchmark-only --benchmark-json=benchmark/results.json"
 
+# Pytest configuration
 [tool.pytest.ini_options]
 markers = ["benchmark: marks tests as benchmarks (select with '-m benchmark')"]
 addopts = "-v -p no:briefcase"
@@ -224,6 +235,7 @@ python_files = ["test_*.py"]
 filterwarnings = ["ignore::DeprecationWarning", "ignore::UserWarning"]
 asyncio_mode = "auto"
 
+# Pytest-benchmark configuration
 [tool.pytest-benchmark]
 min_rounds = 100
 min_time = 0.1
