@@ -12,7 +12,6 @@ from pathlib import Path
 
 import fire
 from loguru import logger
-
 from twat.paths import PathManager
 from twat_genai.core.config import ImageInput, ImageResult, ImageSizeWH
 from twat_genai.core.image import ImageSizes

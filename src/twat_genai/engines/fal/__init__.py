@@ -10,10 +10,9 @@ import os
 from typing import TYPE_CHECKING, Any, Dict, Optional
 
 from dotenv import load_dotenv
-from loguru import logger
-
 from fal.client import get_result, submit_job
 from fal.config import FALJobConfig, ImageToImageConfig, ModelTypes
+from loguru import logger
 
 from ..base import EngineConfig, ImageGenerationEngine
 

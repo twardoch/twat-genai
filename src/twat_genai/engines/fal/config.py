@@ -9,9 +9,8 @@ from __future__ import annotations
 from enum import Enum
 from typing import TYPE_CHECKING, Any
 
-from pydantic import BaseModel, RootModel, model_validator
-
 from fal.models import FALImageInput
+from pydantic import BaseModel, RootModel, model_validator
 
 from ...core.config import ImageInput
 

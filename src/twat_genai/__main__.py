@@ -23,7 +23,6 @@ from dotenv import load_dotenv
 from loguru import logger
 from pydantic import BaseModel, RootModel
 from slugify import slugify
-
 from twat_genai.cli import cli
 
 if TYPE_CHECKING:
