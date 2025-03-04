@@ -1,0 +1,1797 @@
+This file is a merged representation of a subset of the codebase, containing files not matching ignore patterns, combined into a single document by Repomix. The content has been processed where empty lines have been removed.
+
+================================================================
+File Summary
+================================================================
+
+Purpose:
+--------
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+
+File Format:
+------------
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Multiple file entries, each consisting of:
+  a. A separator line (================)
+  b. The file path (File: path/to/file)
+  c. Another separator line
+  d. The full contents of the file
+  e. A blank line
+
+Usage Guidelines:
+-----------------
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+
+Notes:
+------
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching these patterns are excluded: .specstory/**/*.md, .venv/**, _private/**, CLEANUP.txt, **/*.json, *.lock
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Empty lines have been removed from all files
+
+Additional Info:
+----------------
+
+================================================================
+Directory Structure
+================================================================
+.cursor/
+  rules/
+    0project.mdc
+    cleanup.mdc
+    filetree.mdc
+    quality.mdc
+.github/
+  workflows/
+    push.yml
+    release.yml
+src/
+  twat_genai/
+    core/
+      config.py
+      image.py
+      models.py
+      prompt.py
+    engines/
+      fal/
+        __init__.py
+        client.py
+        config.py
+        lora.py
+        models.py
+      base.py
+    __init__.py
+    __main__.py
+    cli.py
+tests/
+  test_twat_genai.py
+.gitignore
+.pre-commit-config.yaml
+cleanup.py
+LICENSE
+LOG.md
+pyproject.toml
+README.md
+VERSION.txt
+
+================================================================
+Files
+================================================================
+
+================
+File: .cursor/rules/0project.mdc
+================
+---
+description: About this project
+globs:
+---
+# About this project
+
+`twat-fs` is a file system utility library focused on robust and extensible file upload capabilities with multiple provider support. It provides:
+
+- Multi-provider upload system with smart fallback (catbox.moe default, plus Dropbox, S3, etc.)
+- Automatic retry for temporary failures, fallback for permanent ones
+- URL validation and clean developer experience with type hints
+- Simple CLI: `python -m twat_fs upload_file path/to/file.txt`
+- Easy installation: `uv pip install twat-fs` (basic) or `uv pip install 'twat-fs[all,dev]'` (all features)
+
+## Development Notes
+- Uses `uv` for Python package management
+- Quality tools: ruff, mypy, pytest
+- Clear provider protocol for adding new storage backends
+- Strong typing and runtime checks throughout
+
+================
+File: .cursor/rules/cleanup.mdc
+================
+---
+description: Run `cleanup.py` script before and after changes
+globs: 
+---
+Before you do any changes or if I say "cleanup", run the `cleanup.py update` script in the main folder. Analyze the results, describe recent changes in @LOG.md and edit @TODO.md to update priorities and plan next changes. PERFORM THE CHANGES, then run the `cleanup.py status` script and react to the results.
+
+When you edit @TODO.md, lead in lines with empty GFM checkboxes if things aren't done (`- [ ] `) vs. filled (`- [x] `) if done.
+
+================
+File: .cursor/rules/filetree.mdc
+================
+---
+description: File tree of the project
+globs: 
+---
+[ 768]  .
+├── [  64]  .benchmarks
+├── [  96]  .cursor
+│   └── [ 224]  rules
+│       ├── [ 821]  0project.mdc
+│       ├── [ 516]  cleanup.mdc
+│       ├── [1.6K]  filetree.mdc
+│       └── [2.0K]  quality.mdc
+├── [  96]  .github
+│   └── [ 128]  workflows
+│       ├── [2.7K]  push.yml
+│       └── [1.4K]  release.yml
+├── [3.5K]  .gitignore
+├── [ 500]  .pre-commit-config.yaml
+├── [ 987]  CLEANUP.txt
+├── [1.0K]  LICENSE
+├── [2.5K]  LOG.md
+├── [2.9K]  README.md
+├── [   7]  VERSION.txt
+├── [ 13K]  cleanup.py
+├── [ 160]  dist
+├── [8.2K]  pyproject.toml
+├── [ 128]  src
+│   └── [ 352]  twat_genai
+│       ├── [ 864]  __init__.py
+│       ├── [ 22K]  __main__.py
+│       ├── [1.1K]  __main___loras.json
+│       ├── [6.4K]  cli.py
+│       ├── [ 224]  core
+│       │   ├── [1.7K]  config.py
+│       │   ├── [1.3K]  image.py
+│       │   ├── [1.3K]  models.py
+│       │   └── [8.0K]  prompt.py
+│       └── [ 192]  engines
+│           ├── [1.7K]  base.py
+│           └── [ 256]  fal
+│               ├── [3.3K]  __init__.py
+│               ├── [4.5K]  client.py
+│               ├── [3.2K]  config.py
+│               ├── [5.9K]  lora.py
+│               └── [1.2K]  models.py
+└── [ 128]  tests
+    └── [ 154]  test_twat_genai.py
+
+13 directories, 30 files
+
+================
+File: .cursor/rules/quality.mdc
+================
+---
+description: Quality
+globs: 
+---
+- **Verify Information**: Always verify information before presenting it. Do not make assumptions or speculate without clear evidence.
+- **No Apologies**: Never use apologies.
+- **No Whitespace Suggestions**: Don't suggest whitespace changes.
+- **No Inventions**: Don't invent major changes other than what's explicitly requested.
+- **No Unnecessary Confirmations**: Don't ask for confirmation of information already provided in the context.
+- **Preserve Existing Code**: Don't remove unrelated code or functionalities. Pay attention to preserving existing structures.
+- **No Implementation Checks**: Don't ask the user to verify implementations that are visible in the provided context.
+- **No Unnecessary Updates**: Don't suggest updates or changes to files when there are no actual modifications needed.
+- **No Current Implementation**: Don't show or discuss the current implementation unless specifically requested.
+- **Use Explicit Variable Names**: Prefer descriptive, explicit variable names over short, ambiguous ones to enhance code readability.
+- **Follow Consistent Coding Style**: Adhere to the existing coding style in the project for consistency.
+- **Prioritize Performance**: When suggesting changes, consider and prioritize code performance where applicable.
+- **Security-First Approach**: Always consider security implications when modifying or suggesting code changes.
+- **Test Coverage**: Suggest or include appropriate unit tests for new or modified code.
+- **Error Handling**: Implement robust error handling and logging where necessary.
+- **Modular Design**: Encourage modular design principles to improve code maintainability and reusability.
+- **Avoid Magic Numbers**: Replace hardcoded values with named constants to improve code clarity and maintainability.
+- **Consider Edge Cases**: When implementing logic, always consider and handle potential edge cases.
+- **Use Assertions**: Include assertions wherever possible to validate assumptions and catch potential errors early.
+
+================
+File: .github/workflows/push.yml
+================
+name: Build & Test
+on:
+  push:
+    branches: [main]
+    tags-ignore: ["v*"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+  id-token: write
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Run Ruff lint
+        uses: astral-sh/ruff-action@v3
+        with:
+          version: "latest"
+          args: "check --output-format=github"
+      - name: Run Ruff Format
+        uses: astral-sh/ruff-action@v3
+        with:
+          version: "latest"
+          args: "format --check --respect-gitignore"
+  test:
+    name: Run Tests
+    needs: quality
+    strategy:
+      matrix:
+        python-version: ["3.10"]
+        os: [ubuntu-latest]
+      fail-fast: true
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install UV
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+          python-version: ${{ matrix.python-version }}
+          enable-cache: true
+          cache-suffix: ${{ matrix.os }}-${{ matrix.python-version }}
+      - name: Install test dependencies
+        run: |
+          uv pip install --system --upgrade pip
+          uv pip install --system ".[test]"
+      - name: Run tests with Pytest
+        run: uv run pytest -n auto --maxfail=1 --disable-warnings --cov-report=xml --cov-config=pyproject.toml --cov=src/twat_genai --cov=tests tests/
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.python-version }}-${{ matrix.os }}
+          path: coverage.xml
+  build:
+    name: Build Distribution
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install UV
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+          python-version: "3.12"
+          enable-cache: true
+      - name: Install build tools
+        run: uv pip install build hatchling hatch-vcs
+      - name: Build distributions
+        run: uv run python -m build --outdir dist
+      - name: Upload distribution artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-files
+          path: dist/
+          retention-days: 5
+
+================
+File: .github/workflows/release.yml
+================
+name: Release
+on:
+  push:
+    tags: ["v*"]
+permissions:
+  contents: write
+  id-token: write
+jobs:
+  release:
+    name: Release to PyPI
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/twat-genai
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install UV
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+          python-version: "3.12"
+          enable-cache: true
+      - name: Install build tools
+        run: uv pip install build hatchling hatch-vcs
+      - name: Build distributions
+        run: uv run python -m build --outdir dist
+      - name: Verify distribution files
+        run: |
+          ls -la dist/
+          test -n "$(find dist -name '*.whl')" || (echo "Wheel file missing" && exit 1)
+          test -n "$(find dist -name '*.tar.gz')" || (echo "Source distribution missing" && exit 1)
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_TOKEN }}
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist/*
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+================
+File: src/twat_genai/core/config.py
+================
+class ImageSizeWH(BaseModel):
+class ImageInput(BaseModel):
+    def is_valid(self) -> bool:
+            sum(1 for x in (self.url, self.path, self.pil_image) if x is not None) == 1
+    async def to_url(self) -> str:
+        raise NotImplementedError(msg)
+class ImageResult(BaseModel):
+
+================
+File: src/twat_genai/core/image.py
+================
+class ImageSizes(str, Enum):
+class ImageFormats(str, Enum):
+async def save_image(
+    image.save(output_path, format=format.value, quality=quality)
+def validate_image_size(size_str: str) -> tuple[int, int] | None:
+        w, h = (int(x.strip()) for x in size_str.split(",", 1))
+
+================
+File: src/twat_genai/core/models.py
+================
+class ModelTypes(str, Enum):
+class ImageSizes(str, Enum):
+class ImageFormats(str, Enum):
+class ImageSizeWH(BaseModel):
+class ImageResult(BaseModel):
+
+================
+File: src/twat_genai/core/prompt.py
+================
+class ImagePrompt(BaseModel):
+    url: AnyHttpUrl = Field(
+    weight: float = Field(
+    def is_valid(self) -> bool:
+        return str(self.url).lower().endswith(ALLOWED_IMAGE_EXTENSIONS)
+class PromptParameter(BaseModel):
+    name: str = Field(..., description="Parameter name without -- prefix")
+    value: str | None = Field(None, description="Parameter value if any")
+class PromptPart(BaseModel):
+    text: str = Field(..., description="Text content of this prompt part")
+    weight: float = Field(default=1.0, description="Relative weight of this part")
+class MidjourneyPrompt(BaseModel):
+    image_prompts: list[ImagePrompt] = Field(
+    text_parts: list[PromptPart] = Field(..., description="Text portions of the prompt")
+    parameters: list[PromptParameter] = Field(
+    raw_prompt: str = Field(..., description="Original unparsed prompt")
+    def to_string(self) -> str:
+            parts.append(str(img.url))
+                parts.append(f"--iw {img.weight}")
+                text_parts.append(part.text)
+                text_parts.append(f"{part.text}::{part.weight}")
+        parts.append(" ".join(text_parts))
+                parts.append(f"--{param.name} {param.value}")
+                parts.append(f"--{param.name}")
+        return " ".join(parts)
+def split_top_level(s: str, delimiter: str = ",") -> list[str]:
+            parts.append("".join(current).strip())
+            current.append(char)
+def expand_permutations(prompt: str) -> list[str]:
+    start_idx = prompt.find(PERMUTATION_START)
+    for i, char in enumerate(prompt[start_idx:], start=start_idx):
+        raise ValueError(msg)
+        for suffix_expanded in expand_permutations(suffix):
+            results.append(f"{prefix}{option.strip()}{suffix_expanded}")
+def parse_parameters(text: str) -> tuple[str, list[PromptParameter]]:
+    parts = text.split()
+    while i < len(parts):
+        if part.startswith(PARAM_PREFIX):
+            if i + 1 < len(parts) and not parts[i + 1].startswith(PARAM_PREFIX):
+            params.append(PromptParameter(name=name, value=value))
+            prompt_parts.append(part)
+    return " ".join(prompt_parts), params
+def parse_multi_prompt(text: str) -> list[PromptPart]:
+        return [PromptPart(text=text)]
+    for part in text.split(MULTI_PROMPT_SEPARATOR):
+        part = part.strip()
+                text, weight_str = part.rsplit(" ", 1)
+                weight = float(weight_str)
+        parts.append(PromptPart(text=text, weight=weight))
+def parse_prompt(prompt: str) -> MidjourneyPrompt:
+    text, parameters = parse_parameters(prompt)
+        if any(part.lower().endswith(ext) for ext in ALLOWED_IMAGE_EXTENSIONS):
+                    if part.startswith(("http://", "https://"))
+                parsed_url = parse_obj_as(AnyHttpUrl, url)
+                image_prompts.append(ImagePrompt(url=parsed_url))
+                logger.warning(f"Invalid image URL {part}: {e}")
+            text_parts.append(part)
+    text = " ".join(text_parts)
+    prompt_parts = parse_multi_prompt(text)
+    return MidjourneyPrompt(
+def normalize_prompts(prompts: str | list[str]) -> list[str]:
+        split_top_level(prompts, delimiter=";") if isinstance(prompts, str) else prompts
+        final_prompts.extend(expand_permutations(raw.strip()))
+
+================
+File: src/twat_genai/engines/fal/__init__.py
+================
+load_dotenv()
+class FALEngine(ImageGenerationEngine):
+    def __init__(self, output_dir: Path | None = None) -> None:
+        self.api_key = os.getenv("FAL_KEY")
+    async def initialize(self) -> None:
+            raise ValueError(msg)
+    async def generate(
+        model = kwargs.get("model", ModelTypes.TEXT)
+        image_config = kwargs.get("image_config")
+        lora_spec = kwargs.get("lora_spec")
+        filename_suffix = kwargs.get("filename_suffix")
+        filename_prefix = kwargs.get("filename_prefix")
+        job_config = FALJobConfig(
+        request_id = await submit_job(job_config)
+            job_params.update(
+                    "image_config": image_config.model_dump(),
+        return await get_result(
+    async def shutdown(self) -> None:
+
+================
+File: src/twat_genai/engines/fal/client.py
+================
+async def submit_job(job: FALJobConfig) -> str:
+    args = await job.to_fal_arguments()
+    handler = await fal_client.submit_async(job.model.value, arguments=args)
+    logger.debug(f"Submitted job with ID: {handler.request_id}")
+async def download_image(url: str, output_path: Path) -> None:
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url)
+        response.raise_for_status()
+        output_path.write_bytes(response.content)
+        logger.info(f"Saved image to: {output_path}")
+async def get_result(
+    status = await fal_client.status_async(
+    while isinstance(status, fal_client.InProgress):
+        await asyncio.sleep(1)
+    result = await fal_client.result_async("fal-ai/flux-lora", request_id)
+    timestamp = result.get("timestamp", datetime.now().strftime("%Y%m%d_%H%M%S"))
+        output_dir.mkdir(parents=True, exist_ok=True)
+        request_id_prefix = request_id.split("-")[0] if request_id else ""
+            await download_image(image_url, image_path)
+            logger.error(f"Failed to save image {image_path}: {e}")
+            metadata = ImageResult(
+                    "path": str(image_path) if image_path else None,
+                    "metadata_path": str(metadata_path) if metadata_path else None,
+            metadata_path.write_text(metadata.model_dump_json(indent=2))
+            logger.info(f"Saved metadata to: {metadata_path}")
+            logger.error(f"Failed to save metadata {metadata_path}: {e}")
+    return ImageResult(
+
+================
+File: src/twat_genai/engines/fal/config.py
+================
+class ModelTypes(str, Enum):
+class ImageToImageConfig(BaseModel):
+    @model_validator(mode="before")
+    def convert_image_input(cls, data: Any) -> Any:
+        if isinstance(data, dict) and "input_image" in data:
+            if isinstance(data["input_image"], ImageInput) and not isinstance(
+                data["input_image"] = FALImageInput.from_base(data["input_image"])
+class LoraRecord(BaseModel):
+class LoraRecordList(RootModel[list[LoraRecord]]):
+class LoraLib(RootModel[dict[str, LoraRecordList]]):
+class LoraSpecEntry(BaseModel):
+class CombinedLoraSpecEntry(BaseModel):
+class FALJobConfig(BaseModel):
+    async def to_fal_arguments(self) -> dict[str, Any]:
+        lora_list, final_prompt = await build_lora_arguments(
+            image_url = await self.image_config.input_image.to_url()
+
+================
+File: src/twat_genai/engines/fal/lora.py
+================
+def get_lora_lib() -> LoraLib:
+    paths = PathManager.for_package("twat_genai")
+    user_path = os.getenv("TWAT_GENAI_LORA_LIB")
+        lib_path = Path(user_path)
+        if lib_path.exists():
+            return LoraLib.model_validate_json(lib_path.read_text())
+    bundled_path = Path(__file__).parent.parent.parent / "__main___loras.json"
+    return LoraLib.model_validate_json(bundled_path.read_text())
+LORA_LIB = get_lora_lib()
+def parse_lora_phrase(phrase: str) -> LoraSpecEntry | CombinedLoraSpecEntry:
+    phrase = phrase.strip()
+            entries.append(
+                LoraSpecEntry(path=record.url, scale=record.scale, prompt=phrase + ",")
+        return CombinedLoraSpecEntry(entries=entries, factory_key=phrase)
+        identifier, scale_str = phrase.split(":", 1)
+        identifier = identifier.strip()
+            scale = float(scale_str.strip())
+            raise ValueError(msg)
+    return LoraSpecEntry(path=identifier, scale=scale, prompt="")
+def normalize_lora_spec(
+                        normalized.append(
+                            LoraSpecEntry(path=path, scale=float(scale), prompt=prompt)
+                            LoraSpecEntry(
+                                scale=float(d.get("scale", 1.0)),
+                                prompt=d.get("prompt", ""),
+                        normalized.append(parse_lora_phrase(phrase))
+                            parse_lora_phrase(sub)
+                            if isinstance(sub, str)
+                        normalized.append(CombinedLoraSpecEntry(entries=combined))
+                        msg = f"Unsupported LoRA spec item type: {type(item)}"
+                return [parse_lora_phrase(s)]
+            phrases = [phrase.strip() for phrase in s.split(";") if phrase.strip()]
+            return [parse_lora_phrase(phrase) for phrase in phrases]
+            msg = f"Unsupported LoRA spec type: {type(spec)}"
+async def build_lora_arguments(
+    entries = normalize_lora_spec(lora_spec)
+    def process_entry(entry: LoraSpecEntry | CombinedLoraSpecEntry) -> None:
+        if isinstance(entry, LoraSpecEntry):
+            lora_list.append({"path": entry.path, "scale": entry.scale})
+                prompt_prefixes.append(entry.prompt.rstrip(","))
+                process_entry(sub_entry)
+        process_entry(entry)
+    logger.debug(f"Using LoRA configuration: {lora_list}")
+        f"{', '.join(prompt_prefixes)}, {prompt}".strip() if prompt_prefixes else prompt
+
+================
+File: src/twat_genai/engines/fal/models.py
+================
+class FALImageInput(ImageInput):
+    def from_base(cls, base: ImageInput) -> "FALImageInput":
+        return cls(url=base.url, path=base.path, pil_image=base.pil_image)
+    async def to_url(self) -> str:
+            return await fal_client.upload_file_async(self.path)
+            with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp:
+                tmp_path = Path(tmp.name)
+                self.pil_image.save(tmp_path, format="JPEG", quality=95)
+                return await fal_client.upload_file_async(tmp_path)
+            raise ValueError(msg)
+
+================
+File: src/twat_genai/engines/base.py
+================
+class EngineConfig(BaseModel):
+class ImageGenerationEngine(ABC):
+    async def initialize(self) -> None:
+    async def generate(
+    async def shutdown(self) -> None:
+    async def __aenter__(self) -> ImageGenerationEngine:
+        await self.initialize()
+    async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
+        await self.shutdown()
+
+================
+File: src/twat_genai/__init__.py
+================
+
+
+================
+File: src/twat_genai/__main__.py
+================
+load_dotenv()
+class ModelTypes(str, Enum):
+class ImageInput(BaseModel):
+    def is_valid(self) -> bool:
+            sum(1 for x in (self.url, self.path, self.pil_image) if x is not None) == 1
+    async def to_url(self) -> str:
+            raise ValueError(msg)
+            return await fal_client.upload_file_async(Path(str(self.path)))
+            with tempfile.NamedTemporaryFile(suffix=".jpg") as tmp:
+                tmp_path = Path(tmp.name)
+                self.pil_image.save(tmp_path, format="JPEG", quality=95)
+                return await fal_client.upload_file_async(tmp_path)
+class ImageToImageConfig(BaseModel):
+class ImageSizes(str, Enum):
+class ImageFormats(str, Enum):
+class ImageSizeWH(BaseModel):
+class LoraRecord(BaseModel):
+class LoraRecordList(RootModel[list[LoraRecord]]):
+class LoraLib(RootModel[dict[str, LoraRecordList]]):
+LORA_LIB_PATH = Path(__file__).parent / f"{Path(__file__).stem}_loras.json"
+LORA_LIB = LoraLib.model_validate_json(LORA_LIB_PATH.read_text())
+class ImageResult(BaseModel):
+class LoraSpecEntry(BaseModel):
+class CombinedLoraSpecEntry(BaseModel):
+def parse_lora_phrase(phrase: str) -> LoraSpecEntry | CombinedLoraSpecEntry:
+    phrase = phrase.strip()
+            entries.append(
+                LoraSpecEntry(path=record.url, scale=record.scale, prompt=phrase + ",")
+        return CombinedLoraSpecEntry(entries=entries, factory_key=phrase)
+        identifier, scale_str = phrase.split(":", 1)
+        identifier = identifier.strip()
+            scale = float(scale_str.strip())
+    return LoraSpecEntry(path=identifier, scale=scale, prompt="")
+def normalize_lora_spec(
+                        normalized.append(
+                            LoraSpecEntry(path=path, scale=float(scale), prompt=prompt)
+                            LoraSpecEntry(
+                                scale=float(d.get("scale", 1.0)),
+                                prompt=d.get("prompt", ""),
+                        normalized.append(parse_lora_phrase(phrase))
+                            parse_lora_phrase(sub)
+                            if isinstance(sub, str)
+                        normalized.append(CombinedLoraSpecEntry(entries=combined))
+                        msg = f"Unsupported Lora spec item type: {type(item)}"
+                return [parse_lora_phrase(s)]
+            phrases = [phrase.strip() for phrase in s.split(";") if phrase.strip()]
+            return [parse_lora_phrase(phrase) for phrase in phrases]
+            msg = f"Unsupported Lora spec type: {type(spec)}"
+def build_lora_arguments(
+    entries = normalize_lora_spec(lora_spec)
+    def process_entry(entry: LoraSpecEntry | CombinedLoraSpecEntry) -> None:
+        if isinstance(entry, LoraSpecEntry):
+            lora_list.append({"path": entry.path, "scale": entry.scale})
+                prompt_prefixes.append(entry.prompt.rstrip(","))
+                process_entry(sub_entry)
+        process_entry(entry)
+        f"{', '.join(prompt_prefixes)}, {prompt}".strip() if prompt_prefixes else prompt
+def split_top_level(s: str, delimiter: str = ";") -> list[str]:
+            parts.append("".join(buf))
+            buf.append(char)
+def expand_prompts(s: str) -> list[str]:
+    open_index = s.find("{")
+    for i, char in enumerate(s[open_index:], start=open_index):
+    alternatives = split_top_level(brace_content, delimiter=";")
+        for alt_exp in expand_prompts(alt):
+            for suffix_exp in expand_prompts(suffix):
+                expanded.append(f"{prefix}{alt_exp}{suffix_exp}")
+class TTIJobConfig(BaseModel):
+    async def to_fal_arguments(self) -> dict[str, Any]:
+            if isinstance(self.image_size, ImageSizes)
+        lora_list, final_prompt = build_lora_arguments(self.lora_spec, self.prompt)
+        logger.debug(f"Using Lora configuration: {lora_list}")
+            guidance_scale = max(self.guidance_scale, 20.0)
+            image_url = await self.image_config.input_image.to_url()
+async def submit_image_job(job: TTIJobConfig) -> RequestID:
+    args = await job.to_fal_arguments()
+    logger.debug(f"Submitting job with lora_list: {args.get('loras')}")
+    handler = await fal_client.submit_async(job.model.value, arguments=args)
+async def download_image(url: URLStr, output_path: Path) -> None:
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url)
+        response.raise_for_status()
+        output_path.write_bytes(response.content)
+        logger.info(f"Saved image to: {output_path}")
+async def get_result(
+    status = await fal_client.status_async(
+    while isinstance(status, fal_client.InProgress):
+        await asyncio.sleep(1)
+    result = await fal_client.result_async("fal-ai/flux-lora", request_id)
+    timestamp = result.get("timestamp", datetime.now().strftime("%Y%m%d_%H%M%S"))
+    content_type = image_info.get("content_type", "image/jpeg")
+        output_dir.mkdir(parents=True, exist_ok=True)
+        request_id_prefix = request_id.split("-")[0] if request_id else ""
+            words = original_prompt.split()
+                "_".join(words[:2]).lower() + "_"
+                if len(words) >= 2
+        filename = slugify(stem) + f".{extension}"
+            await download_image(image_url, image_path)
+            logger.error(f"Failed to save image {image_path}: {e}")
+            metadata_path = output_dir / f"{slugify(stem)}.json"
+            metadata = ImageResult(
+                    "path": str(image_path) if image_path else None,
+                    "metadata_path": str(metadata_path) if metadata_path else None,
+            metadata_path.write_text(metadata.model_dump_json(indent=2))
+            logger.info(f"Saved metadata to: {metadata_path}")
+            logger.error(f"Failed to save metadata {metadata_path}: {e}")
+    return ImageResult(
+async def process_single_job(job: TTIJobConfig) -> ImageResult:
+    request_id = await submit_image_job(job)
+    logger.info(f"Submitted job with ID: {request_id}")
+        suffix_parts.append(job.filename_suffix)
+    elif isinstance(job.lora_spec, str):
+        suffix_parts.append(job.lora_spec)
+    elif isinstance(job.lora_spec, CombinedLoraSpecEntry) and job.lora_spec.factory_key:
+        suffix_parts.append(slugify(job.lora_spec.factory_key)[:8])
+    combined_suffix = "_".join(suffix_parts) if suffix_parts else None
+        if isinstance(job.image_size, Enum)
+    return await get_result(
+async def async_main(
+        split_top_level(prompts, delimiter=";") if isinstance(prompts, str) else prompts
+        final_prompts.extend(expand_prompts(raw.strip()))
+    logger.debug(f"Expanded prompts: {final_prompts}")
+    if lora and isinstance(lora, str) and lora in LORA_LIB.root and not filename_suffix:
+        default_suffix = slugify(lora)[:8]
+        size: ImageSize = ImageSizes[image_size.upper()]
+                w, h = (int(x.strip()) for x in image_size.split(",", 1))
+                size = ImageSizeWH(width=w, height=h)
+                raise ValueError(msg) from err
+            valid_names = ", ".join(s.name for s in ImageSizes)
+    output_dir_path = Path(output_dir)
+    output_dir_path.mkdir(parents=True, exist_ok=True)
+            jobs.append(
+                TTIJobConfig(
+    return await asyncio.gather(*(process_single_job(job) for job in jobs))
+    fire.Fire(cli)
+
+================
+File: src/twat_genai/cli.py
+================
+def parse_image_size(size_str: str) -> ImageSizes | ImageSizeWH:
+        return ImageSizes[size_str.upper()]
+                w, h = (int(x.strip()) for x in size_str.split(",", 1))
+                return ImageSizeWH(width=w, height=h)
+                raise ValueError(msg) from err
+        valid_names = ", ".join(s.name for s in ImageSizes)
+        raise ValueError(msg)
+def get_output_dir(user_dir: str | Path | None = None) -> Path:
+        return Path(user_dir)
+    paths = PathManager.for_package("twat_genai")
+    return Path("generated_images")
+async def async_main(
+    output_dir_path = get_output_dir(output_dir)
+    output_dir_path.mkdir(parents=True, exist_ok=True)
+    config = EngineConfig(
+        image_size=parse_image_size(image_size),
+    final_prompts = normalize_prompts(prompts)
+    logger.debug(f"Expanded prompts: {final_prompts}")
+    async with FALEngine(output_dir_path) as engine:
+            result = await engine.generate(
+            results.append(result)
+def cli(
+    logger.remove()
+    logger.add(sys.stderr, level="DEBUG" if verbose else "WARNING")
+    if isinstance(model, str):
+            model = ModelTypes[model.upper()]
+            valid_models = ", ".join(m.name.lower() for m in ModelTypes)
+        image_config = ImageToImageConfig(
+            input_image=ImageInput(
+                path=Path(input_image) if input_image else None,
+    return asyncio.run(
+        async_main(
+    fire.Fire(cli)
+
+================
+File: tests/test_twat_genai.py
+================
+def test_version():
+
+================
+File: .gitignore
+================
+*_autogen/
+.DS_Store
+__version__.py
+__pycache__/
+_Chutzpah*
+_deps
+_NCrunch_*
+_pkginfo.txt
+_Pvt_Extensions
+_ReSharper*/
+_TeamCity*
+_UpgradeReport_Files/
+!?*.[Cc]ache/
+!.axoCover/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!**/[Pp]ackages/build/
+!Directory.Build.rsp
+.*crunch*.local.xml
+.axoCover/*
+.builds
+.cr/personal
+.fake/
+.history/
+.ionide/
+.localhistory/
+.mfractor/
+.ntvs_analysis.dat
+.paket/paket.exe
+.sass-cache/
+.vs/
+.vscode
+.vscode/*
+.vshistory/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+[Bb]in/
+[Bb]uild[Ll]og.*
+[Dd]ebug/
+[Dd]ebugPS/
+[Dd]ebugPublic/
+[Ee]xpress/
+[Ll]og/
+[Ll]ogs/
+[Oo]bj/
+[Rr]elease/
+[Rr]eleasePS/
+[Rr]eleases/
+[Tt]est[Rr]esult*/
+[Ww][Ii][Nn]32/
+*_h.h
+*_i.c
+*_p.c
+*_wpftmp.csproj
+*- [Bb]ackup ([0-9]).rdl
+*- [Bb]ackup ([0-9][0-9]).rdl
+*- [Bb]ackup.rdl
+*.[Cc]ache
+*.[Pp]ublish.xml
+*.[Rr]e[Ss]harper
+*.a
+*.app
+*.appx
+*.appxbundle
+*.appxupload
+*.aps
+*.azurePubxml
+*.bim_*.settings
+*.bim.layout
+*.binlog
+*.btm.cs
+*.btp.cs
+*.build.csdef
+*.cab
+*.cachefile
+*.code-workspace
+*.coverage
+*.coveragexml
+*.d
+*.dbmdl
+*.dbproj.schemaview
+*.dll
+*.dotCover
+*.DotSettings.user
+*.dsp
+*.dsw
+*.dylib
+*.e2e
+*.exe
+*.gch
+*.GhostDoc.xml
+*.gpState
+*.ilk
+*.iobj
+*.ipdb
+*.jfm
+*.jmconfig
+*.la
+*.lai
+*.ldf
+*.lib
+*.lo
+*.log
+*.mdf
+*.meta
+*.mm.*
+*.mod
+*.msi
+*.msix
+*.msm
+*.msp
+*.ncb
+*.ndf
+*.nuget.props
+*.nuget.targets
+*.nupkg
+*.nvuser
+*.o
+*.obj
+*.odx.cs
+*.opendb
+*.opensdf
+*.opt
+*.out
+*.pch
+*.pdb
+*.pfx
+*.pgc
+*.pgd
+*.pidb
+*.plg
+*.psess
+*.publishproj
+*.publishsettings
+*.pubxml
+*.pyc
+*.rdl.data
+*.rptproj.bak
+*.rptproj.rsuser
+*.rsp
+*.rsuser
+*.sap
+*.sbr
+*.scc
+*.sdf
+*.sln.docstates
+*.sln.iml
+*.slo
+*.smod
+*.snupkg
+*.so
+*.suo
+*.svclog
+*.tlb
+*.tlh
+*.tli
+*.tlog
+*.tmp
+*.tmp_proj
+*.tss
+*.user
+*.userosscache
+*.userprefs
+*.vbp
+*.vbw
+*.VC.db
+*.VC.VC.opendb
+*.VisualState.xml
+*.vsp
+*.vspscc
+*.vspx
+*.vssscc
+*.xsd.cs
+**/[Pp]ackages/*
+**/*.DesktopClient/GeneratedArtifacts
+**/*.DesktopClient/ModelManifest.xml
+**/*.HTMLClient/GeneratedArtifacts
+**/*.Server/GeneratedArtifacts
+**/*.Server/ModelManifest.xml
+*~
+~$*
+$tf/
+AppPackages/
+artifacts/
+ASALocalRun/
+AutoTest.Net/
+Backup*/
+BenchmarkDotNet.Artifacts/
+bld/
+BundleArtifacts/
+ClientBin/
+cmake_install.cmake
+CMakeCache.txt
+CMakeFiles
+CMakeLists.txt.user
+CMakeScripts
+CMakeUserPresets.json
+compile_commands.json
+coverage*.info
+coverage*.json
+coverage*.xml
+csx/
+CTestTestfile.cmake
+dlldata.c
+DocProject/buildhelp/
+DocProject/Help/*.hhc
+DocProject/Help/*.hhk
+DocProject/Help/*.hhp
+DocProject/Help/*.HxC
+DocProject/Help/*.HxT
+DocProject/Help/html
+DocProject/Help/Html2
+ecf/
+FakesAssemblies/
+FodyWeavers.xsd
+Generated_Code/
+Generated\ Files/
+healthchecksdb
+install_manifest.txt
+ipch/
+Makefile
+MigrationBackup/
+mono_crash.*
+nCrunchTemp_*
+node_modules/
+nunit-*.xml
+OpenCover/
+orleans.codegen.cs
+Package.StoreAssociation.xml
+paket-files/
+project.fragment.lock.json
+project.lock.json
+publish/
+PublishScripts/
+rcf/
+ScaffoldingReadMe.txt
+ServiceFabricBackup/
+StyleCopReport.xml
+Testing
+TestResult.xml
+UpgradeLog*.htm
+UpgradeLog*.XML
+x64/
+x86/
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Distribution / packaging
+!dist/.gitkeep
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+.ruff_cache/
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Project specific
+__version__.py
+_private
+
+================
+File: .pre-commit-config.yaml
+================
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.3.4
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+        args: [--respect-gitignore]
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml
+      - id: check-added-large-files
+      - id: debug-statements
+      - id: check-case-conflict
+      - id: mixed-line-ending
+        args: [--fix=lf]
+
+================
+File: cleanup.py
+================
+LOG_FILE = Path("CLEANUP.txt")
+os.chdir(Path(__file__).parent)
+def new() -> None:
+    if LOG_FILE.exists():
+        LOG_FILE.unlink()
+def prefix() -> None:
+    readme = Path(".cursor/rules/0project.mdc")
+    if readme.exists():
+        log_message("\n=== PROJECT STATEMENT ===")
+        content = readme.read_text()
+        log_message(content)
+def suffix() -> None:
+    todo = Path("TODO.md")
+    if todo.exists():
+        log_message("\n=== TODO.md ===")
+        content = todo.read_text()
+def log_message(message: str) -> None:
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+    with LOG_FILE.open("a") as f:
+        f.write(log_line)
+def run_command(cmd: list[str], check: bool = True) -> subprocess.CompletedProcess:
+        result = subprocess.run(
+            log_message(result.stdout)
+        log_message(f"Command failed: {' '.join(cmd)}")
+        log_message(f"Error: {e.stderr}")
+        return subprocess.CompletedProcess(cmd, 1, "", str(e))
+def check_command_exists(cmd: str) -> bool:
+        return which(cmd) is not None
+class Cleanup:
+    def __init__(self) -> None:
+        self.workspace = Path.cwd()
+    def _print_header(self, message: str) -> None:
+        log_message(f"\n=== {message} ===")
+    def _check_required_files(self) -> bool:
+            if not (self.workspace / file).exists():
+                log_message(f"Error: {file} is missing")
+    def _generate_tree(self) -> None:
+        if not check_command_exists("tree"):
+            log_message("Warning: 'tree' command not found. Skipping tree generation.")
+            rules_dir = Path(".cursor/rules")
+            rules_dir.mkdir(parents=True, exist_ok=True)
+            tree_result = run_command(["tree", "-a", "-I", ".git", "--gitignore", "-n", "-h", "-I", "*_cache"])
+            with open(rules_dir / "filetree.mdc", "w") as f:
+                f.write("---\ndescription: File tree of the project\nglobs: \n---\n")
+                f.write(tree_text)
+            log_message("\nProject structure:")
+            log_message(tree_text)
+            log_message(f"Failed to generate tree: {e}")
+    def _git_status(self) -> bool:
+        result = run_command(["git", "status", "--porcelain"], check=False)
+        return bool(result.stdout.strip())
+    def _venv(self) -> None:
+        log_message("Setting up virtual environment")
+            run_command(["uv", "venv"])
+            if venv_path.exists():
+                os.environ["VIRTUAL_ENV"] = str(self.workspace / ".venv")
+                log_message("Virtual environment created and activated")
+                log_message("Virtual environment created but activation failed")
+            log_message(f"Failed to create virtual environment: {e}")
+    def _install(self) -> None:
+        log_message("Installing package with all extras")
+            self._venv()
+            run_command(["uv", "pip", "install", "-e", ".[test,dev]"])
+            log_message("Package installed successfully")
+            log_message(f"Failed to install package: {e}")
+    def _run_checks(self) -> None:
+        log_message("Running code quality checks")
+            log_message(">>> Running code fixes...")
+            run_command(
+            log_message(">>>Running type checks...")
+            run_command(["python", "-m", "mypy", "src", "tests"], check=False)
+            log_message(">>> Running tests...")
+            run_command(["python", "-m", "pytest", "tests"], check=False)
+            log_message("All checks completed")
+            log_message(f"Failed during checks: {e}")
+    def status(self) -> None:
+        prefix()  # Add README.md content at start
+        self._print_header("Current Status")
+        self._check_required_files()
+        self._generate_tree()
+        result = run_command(["git", "status"], check=False)
+        self._print_header("Environment Status")
+        self._install()
+        self._run_checks()
+        suffix()  # Add TODO.md content at end
+    def venv(self) -> None:
+        self._print_header("Virtual Environment Setup")
+    def install(self) -> None:
+        self._print_header("Package Installation")
+    def update(self) -> None:
+        self.status()
+        if self._git_status():
+            log_message("Changes detected in repository")
+                run_command(["git", "add", "."])
+                run_command(["git", "commit", "-m", commit_msg])
+                log_message("Changes committed successfully")
+                log_message(f"Failed to commit changes: {e}")
+            log_message("No changes to commit")
+    def push(self) -> None:
+        self._print_header("Pushing Changes")
+            run_command(["git", "push"])
+            log_message("Changes pushed successfully")
+            log_message(f"Failed to push changes: {e}")
+def repomix(
+            cmd.append("--compress")
+            cmd.append("--remove-empty-lines")
+            cmd.append("-i")
+            cmd.append(ignore_patterns)
+        cmd.extend(["-o", output_file])
+        run_command(cmd)
+        log_message(f"Repository content mixed into {output_file}")
+        log_message(f"Failed to mix repository: {e}")
+def print_usage() -> None:
+    log_message("Usage:")
+    log_message("  cleanup.py status   # Show current status and run all checks")
+    log_message("  cleanup.py venv     # Create virtual environment")
+    log_message("  cleanup.py install  # Install package with all extras")
+    log_message("  cleanup.py update   # Update and commit changes")
+    log_message("  cleanup.py push     # Push changes to remote")
+def main() -> NoReturn:
+    new()  # Clear log file
+    if len(sys.argv) < 2:
+        print_usage()
+        sys.exit(1)
+    cleanup = Cleanup()
+            cleanup.status()
+            cleanup.venv()
+            cleanup.install()
+            cleanup.update()
+            cleanup.push()
+        log_message(f"Error: {e}")
+    repomix()
+    sys.stdout.write(Path("CLEANUP.txt").read_text())
+    sys.exit(0)  # Ensure we exit with a status code
+    main()
+
+================
+File: LICENSE
+================
+MIT License
+
+Copyright (c) 2025 Adam Twardoch
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+================
+File: LOG.md
+================
+---
+this_file: LOG.md
+---
+
+# Changelog
+
+All notable changes to the twat-genai project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [v1.7.5] - 2025-02-15
+
+### Changed
+
+- Improved error message formatting across the codebase
+- Updated type hints to use modern Python syntax (e.g., `list[str]` instead of `List[str]`)
+- Simplified union type hints using `|` operator (e.g., `str | None` instead of `Optional[str]`)
+
+### Fixed
+
+- Fixed circular imports in FAL engine modules
+- Improved error handling and messaging in LoRA processing
+
+## [v1.7.3] - 2025-02-15
+
+### Added
+
+- New FAL-specific image input handling
+- Added `FALImageInput` class for better FAL API integration
+
+### Changed
+
+- Refactored image input processing for better type safety
+- Updated dependency requirements for better compatibility
+
+## [v1.6.2] - 2025-02-06
+
+### Changed
+
+- Updated dependency versions:
+  - `twat>=1.0.0`
+  - `twat-image>=1.0.0`
+
+### Fixed
+
+- Package dependency issues
+
+## [v1.6.1] - 2025-02-06
+
+### Changed
+
+- Reorganized module exports in `__init__.py`
+- Improved code organization and imports
+- Enhanced type annotations throughout the codebase
+
+### Fixed
+
+- Various import and circular dependency issues
+- Code style and formatting improvements
+
+## [v1.6.0] - 2025-02-06
+
+### Added
+
+- Initial public release with core functionality
+- Support for text-to-image generation
+- Support for image-to-image transformation
+- LoRA integration with FAL.ai
+- Command-line interface
+- Python API
+- Configuration management
+- Image processing utilities
+
+### Features
+
+- Multiple model support through FAL.ai
+- Flexible prompt expansion system
+- LoRA configuration management
+- Image size presets and custom sizes
+- Output directory management
+- File naming conventions
+- Environment variable configuration
+
+## [v1.0.0] - 2025-02-06
+
+### Added
+
+- Initial project structure
+- Basic package setup
+- Core dependencies
+- Development environment configuration
+
+[v1.7.5]: https://github.com/twardoch/twat-genai/compare/v1.7.3...v1.7.5
+[v1.7.3]: https://github.com/twardoch/twat-genai/compare/v1.6.2...v1.7.3
+[v1.6.2]: https://github.com/twardoch/twat-genai/compare/v1.6.1...v1.6.2
+[v1.6.1]: https://github.com/twardoch/twat-genai/compare/v1.6.0...v1.6.1
+[v1.6.0]: https://github.com/twardoch/twat-genai/compare/v1.0.0...v1.6.0
+[v1.0.0]: https://github.com/twardoch/twat-genai/releases/tag/v1.0.0
+
+================
+File: pyproject.toml
+================
+# this_file: twat_genai/pyproject.toml
+
+# this_file: twat_genai/pyproject.toml
+
+# Build System Configuration
+# -------------------------
+# Specifies the build system and its requirements for packaging the project
+# Specifies the build backend and its requirements for building the package
+[build-system]
+requires = [
+    "hatchling>=1.27.0",     # Core build backend for Hatch
+    "hatch-vcs>=0.4.0",      # Version Control System plugin for Hatch
+]
+build-backend = "hatchling.build"  # Use Hatchling as the build backend
+
+# Wheel build configuration
+# Specifies which packages to include in the wheel distribution
+[tool.hatch.build.targets.wheel]
+packages = ["src/twat_genai"]
+
+# Project Metadata Configuration
+# ------------------------------
+# Comprehensive project description, requirements, and compatibility information
+[project]
+name = "twat-genai"
+dynamic = ["version"]  # Version is determined dynamically from VCS
+description = ""
+readme = "README.md"
+requires-python = ">=3.10"  # Minimum Python version required
+license = "MIT"
+keywords = []
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+]
+
+# Runtime Dependencies
+# -------------------
+# External packages required for the project to function
+dependencies = [
+    "fal-client>=0.5.9",         # FAL.ai client for AI operations
+    "httpx>=0.28.1",             # HTTP client library
+    "numpy>=2.2.3",              # Numerical computing library
+    "Pillow>=11.1.0",            # Image processing library
+    "pydantic>=2.10.6",          # Data validation using Python type annotations
+    "python-slugify>=8.0.4",     # Text slugification library
+    "twat>=1.8.1",               # Main twat package
+    "twat-image>=1.8.1",         # Image handling functionality
+    "webcolors>=24.11.1",        # Color name and value conversion
+]
+
+# Project Authors
+# ---------------
+[[project.authors]]
+name = "Adam Twardoch"
+email = "adam+github@twardoch.com"
+
+# Project URLs
+# ------------
+# Links to project resources for documentation, issues, and source code
+[project.urls]
+Documentation = "https://github.com/twardoch/twat-genai#readme"
+Issues = "https://github.com/twardoch/twat-genai/issues"
+Source = "https://github.com/twardoch/twat-genai"
+
+# Twat Plugin Registration
+# -----------------------
+# Registers this package as a plugin for the twat ecosystem
+[project.entry-points."twat.plugins"]
+genai = "twat_genai"
+
+# Version configuration using VCS (Git)
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.version.raw-options]
+version_scheme = "post-release"
+
+# VCS hook configuration for version file generation
+[tool.hatch.build.hooks.vcs]
+version-file = "src/twat_genai/__version__.py"
+
+# Default development environment configuration
+[tool.hatch.envs.default]
+dependencies = [
+    "pytest",                # Testing framework
+    "pytest-cov",           # Coverage reporting
+    "mypy>=1.15.0",         # Static type checker
+    "ruff>=0.9.6",          # Fast Python linter
+]
+
+# Scripts available in the default environment
+[tool.hatch.envs.default.scripts]
+test = "pytest {args:tests}"
+test-cov = "pytest --cov-report=term-missing --cov-config=pyproject.toml --cov=src/twat_genai --cov=tests {args:tests}"
+type-check = "mypy src/twat_genai tests"
+lint = ["ruff check src/twat_genai tests", "ruff format src/twat_genai tests"]
+
+# Python version matrix for testing
+[[tool.hatch.envs.all.matrix]]
+python = ["3.10", "3.11", "3.12"]
+
+# Linting environment configuration
+[tool.hatch.envs.lint]
+detached = true  # Run in isolated environment
+dependencies = [
+    "mypy>=1.15.0",         # Static type checker
+    "ruff>=0.9.6",          # Fast Python linter
+]
+
+# Linting environment scripts
+[tool.hatch.envs.lint.scripts]
+typing = "mypy --install-types --non-interactive {args:src/twat_genai tests}"
+style = ["ruff check {args:.}", "ruff format {args:.}"]
+fmt = ["ruff format {args:.}", "ruff check --fix {args:.}"]
+all = ["style", "typing"]
+
+# Ruff (linter) configuration
+[tool.ruff]
+target-version = "py310"
+line-length = 88
+
+# Ruff lint rules configuration
+[tool.ruff.lint]
+extend-select = [
+    "A",     # flake8-builtins
+    "ARG",   # flake8-unused-arguments
+    "B",     # flake8-bugbear
+    "C",     # flake8-comprehensions
+    "DTZ",   # flake8-datetimez
+    "E",     # pycodestyle errors
+    "EM",    # flake8-errmsg
+    "F",     # pyflakes
+    "FBT",   # flake8-boolean-trap
+    "I",     # isort
+    "ICN",   # flake8-import-conventions
+    "ISC",   # flake8-implicit-str-concat
+    "N",     # pep8-naming
+    "PLC",   # pylint convention
+    "PLE",   # pylint error
+    "PLR",   # pylint refactor
+    "PLW",   # pylint warning
+    "Q",     # flake8-quotes
+    "RUF",   # Ruff-specific rules
+    "S",     # flake8-bandit
+    "T",     # flake8-debugger
+    "TID",   # flake8-tidy-imports
+    "UP",    # pyupgrade
+    "W",     # pycodestyle warnings
+    "YTT",   # flake8-2020
+]
+ignore = [
+    "ARG001", # Unused function argument
+    "E501",   # Line too long
+    "I001",   # Import block formatting
+]
+
+# File-specific Ruff configurations
+[tool.ruff.per-file-ignores]
+"tests/*" = ["S101"]  # Allow assert in tests
+
+# MyPy (type checker) configuration
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+
+# Coverage.py configuration for test coverage
+[tool.coverage.run]
+source_pkgs = ["twat_genai", "tests"]
+branch = true
+parallel = true
+omit = [
+    "src/twat_genai/__about__.py",
+]
+
+# Coverage path mappings
+[tool.coverage.paths]
+twat_genai = ["src/twat_genai", "*/twat-genai/src/twat_genai"]
+tests = ["tests", "*/twat-genai/tests"]
+
+# Coverage report configuration
+[tool.coverage.report]
+exclude_lines = [
+    "no cov",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]
+
+# Optional dependencies
+[project.optional-dependencies]
+test = [
+    "pytest>=8.3.4",
+    "pytest-cov>=6.0.0",
+    "pytest-xdist>=3.6.1",                # For parallel test execution
+    "pytest-benchmark[histogram]>=5.1.0",  # For performance testing
+]
+
+dev = [
+    "pre-commit>=4.1.0",     # Git pre-commit hooks
+    "ruff>=0.9.6",           # Fast Python linter
+    "mypy>=1.15.0",          # Static type checker
+]
+
+all = [
+    "fal-client>=0.5.9",         # FAL.ai client
+    "httpx>=0.28.1",             # HTTP client
+    "numpy>=2.2.3",              # Numerical computing
+    "Pillow>=11.1.0",            # Image processing
+    "pydantic>=2.10.6",          # Data validation
+    "python-slugify>=8.0.4",     # Text slugification
+    "twat>=1.8.1",               # Main package
+    "twat-image>=1.8.1",         # Image handling
+    "webcolors>=24.11.1",        # Color utilities
+]
+
+# Test environment configuration
+[tool.hatch.envs.test]
+dependencies = [".[test]"]
+
+# Test environment scripts
+[tool.hatch.envs.test.scripts]
+test = "python -m pytest -n auto {args:tests}"
+test-cov = "python -m pytest -n auto --cov-report=term-missing --cov-config=pyproject.toml --cov=src/twat_genai --cov=tests {args:tests}"
+bench = "python -m pytest -v -p no:briefcase tests/test_benchmark.py --benchmark-only"
+bench-save = "python -m pytest -v -p no:briefcase tests/test_benchmark.py --benchmark-only --benchmark-json=benchmark/results.json"
+
+# Pytest configuration
+[tool.pytest.ini_options]
+markers = ["benchmark: marks tests as benchmarks (select with '-m benchmark')"]
+addopts = "-v -p no:briefcase"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+filterwarnings = ["ignore::DeprecationWarning", "ignore::UserWarning"]
+asyncio_mode = "auto"
+
+# Pytest-benchmark configuration
+[tool.pytest-benchmark]
+min_rounds = 100
+min_time = 0.1
+histogram = true
+storage = "file"
+save-data = true
+compare = [
+    "min",    # Minimum time
+    "max",    # Maximum time
+    "mean",   # Mean time
+    "stddev", # Standard deviation
+    "median", # Median time
+    "iqr",    # Inter-quartile range
+    "ops",    # Operations per second
+    "rounds", # Number of rounds
+]
+
+================
+File: README.md
+================
+# twat-genai
+
+(work in progress)
+
+Image generation package that leverages fal.ai's models for AI image generation. Provides a flexible command-line interface and Python API for generating images using various AI models and techniques.
+
+## Features
+
+- Multiple AI image generation modes:
+  - Text-to-image generation
+  - Image-to-image transformation
+  - Canny edge-guided generation
+  - Depth-guided generation
+- Support for LoRA (Low-Rank Adaptation) models with a built-in library of style presets
+- Flexible prompt expansion with alternatives using brace syntax
+- Concurrent image generation for multiple prompts
+- Comprehensive metadata storage for generated images
+- Modern Python packaging with PEP 621 compliance
+- Type hints and runtime type checking
+- Comprehensive test suite and documentation
+- CI/CD ready configuration
+
+## Installation
+
+```bash
+pip install twat-genai
+```
+
+
+## Usage
+
+### Command Line Interface
+
+```bash
+## Basic text-to-image generation
+python -m twat_genai "a beautiful sunset" --output_dir images
+## Using a specific style from the LoRA library
+python -m twat_genai "a beautiful sunset" --lora "shou_xin"
+## Image-to-image transformation
+python -m twat_genai "enhance this photo" --model image --input_image input.jpg
+## Multiple prompts with alternatives
+python -m twat_genai "a {red; blue; green} house with {white; black} windows"
+```
+
+### Python API
+
+```python
+import twat_genai
+from twat_genai.main import async_main, ModelTypes
+
+## Generate images asynchronously
+results = await async_main(
+prompts="a beautiful sunset",
+output_dir="generated_images",
+model=ModelTypes.TEXT,
+lora="shou_xin",
+image_size="SQ"
+)   
+```
+
+
+## Key Features in Detail
+
+### Prompt Expansion
+The tool supports flexible prompt expansion using brace syntax:
+- `"a {red; blue} house"` generates two images: "a red house" and "a blue house"
+- Nested alternatives are supported
+- Semicolons separate alternatives
+
+### LoRA Styles
+Built-in library of LoRA styles for different artistic effects:
+- Gesture drawing
+- Sketch and smudge effects
+- 2-color illustrations
+- Pencil sketches
+- Tarot card style
+- And more...
+
+### Image Generation Modes
+- **Text-to-Image**: Generate images from text descriptions
+- **Image-to-Image**: Transform existing images
+- **Canny Edge**: Use edge detection to guide generation
+- **Depth-Guided**: Use depth information for generation
+
+### Output Management
+- Automatic file naming with customizable prefixes/suffixes
+- Metadata storage in JSON format
+- Various image size options (square, landscape, portrait)
+- Support for custom dimensions
+
+## Development
+
+This project uses [Hatch](https://hatch.pypa.io/) for development workflow management.
+
+### Setup Development Environment
+
+```bash
+## Install hatch if you haven't already
+pip install hatch
+## Create and activate development environment
+hatch shell
+## Run tests
+hatch run test
+## Run tests with coverage
+hatch run test-cov
+## Run linting
+hatch run lint
+## Format code
+hatch run format
+```
+
+## License
+
+MIT License  
+.
+
+================
+File: VERSION.txt
+================
+v2.5.3
+
+
+
+================================================================
+End of Codebase
+================================================================
