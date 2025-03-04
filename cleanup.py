@@ -51,12 +51,13 @@ Required Files:
 - TODO.md: Pending tasks and future plans
 """
 
-import os
 import subprocess
+import os
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import NoReturn
+from shutil import which
 
 # Configuration
 IGNORE_PATTERNS = [
@@ -101,7 +102,7 @@ def suffix() -> None:
 
 def log_message(message: str) -> None:
     """Log a message to file and console with timestamp."""
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
     log_line = f"{timestamp} - {message}\n"
     with LOG_FILE.open("a") as f:
         f.write(log_line)
@@ -110,7 +111,13 @@ def log_message(message: str) -> None:
 def run_command(cmd: list[str], check: bool = True) -> subprocess.CompletedProcess:
     """Run a shell command and return the result."""
     try:
-        result = subprocess.run(cmd, check=check, capture_output=True, text=True)
+        result = subprocess.run(
+            cmd,
+            check=check,
+            capture_output=True,
+            text=True,
+            shell=False,  # Explicitly set shell=False for security
+        )
         if result.stdout:
             log_message(result.stdout)
         return result
@@ -125,9 +132,8 @@ def run_command(cmd: list[str], check: bool = True) -> subprocess.CompletedProce
 def check_command_exists(cmd: str) -> bool:
     """Check if a command exists in the system."""
     try:
-        subprocess.run(["which", cmd], check=True, capture_output=True)
-        return True
-    except subprocess.CalledProcessError:
+        return which(cmd) is not None
+    except Exception:
         return False
 
 
@@ -161,9 +167,7 @@ class Cleanup:
             rules_dir = Path(".cursor/rules")
             rules_dir.mkdir(parents=True, exist_ok=True)
             # Get tree output
-            tree_result = run_command(
-                ["tree", "-a", "-I", ".git", "--gitignore", "-n", "-h", "-I", "*_cache"]
-            )
+            tree_result = run_command(["tree", "-a", "-I", ".git", "--gitignore", "-n", "-h", "-I", "*_cache"])
             tree_text = tree_result.stdout
             # Write frontmatter and tree output to file
             with open(rules_dir / "filetree.mdc", "w") as f:
@@ -192,9 +196,7 @@ class Cleanup:
             venv_path = self.workspace / ".venv" / "bin" / "activate"
             if venv_path.exists():
                 os.environ["VIRTUAL_ENV"] = str(self.workspace / ".venv")
-                os.environ["PATH"] = (
-                    f"{self.workspace / '.venv' / 'bin'}{os.pathsep}{os.environ['PATH']}"
-                )
+                os.environ["PATH"] = f"{self.workspace / '.venv' / 'bin'}{os.pathsep}{os.environ['PATH']}"
                 log_message("Virtual environment created and activated")
             else:
                 log_message("Virtual environment created but activation failed")
@@ -320,10 +322,11 @@ class Cleanup:
 
 
 def repomix(
+    *,
     compress: bool = True,
     remove_empty_lines: bool = True,
     ignore_patterns: str = ".specstory/**/*.md,.venv/**,_private/**,CLEANUP.txt,**/*.json,*.lock",
-    output_file: str = "twat_search.txt",
+    output_file: str = "REPO_CONTENT.txt",
 ) -> None:
     """Combine repository files into a single text file.
 
@@ -390,6 +393,8 @@ def main() -> NoReturn:
     except Exception as e:
         log_message(f"Error: {e}")
     repomix()
+    sys.stdout.write(Path("CLEANUP.txt").read_text())
+    sys.exit(0)  # Ensure we exit with a status code
 
 
 if __name__ == "__main__":
