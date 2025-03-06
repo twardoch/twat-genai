@@ -20,6 +20,7 @@ globs:
 ├── [1.0K]  LICENSE
 ├── [2.5K]  LOG.md
 ├── [2.9K]  README.md
+├── [ 57K]  REPO_CONTENT.txt
 ├── [   7]  VERSION.txt
 ├── [ 13K]  cleanup.py
 ├── [ 160]  dist
@@ -46,4 +47,4 @@ globs:
 └── [ 128]  tests
     └── [ 154]  test_twat_genai.py
 
-13 directories, 30 files
+13 directories, 31 files
