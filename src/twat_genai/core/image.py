@@ -27,6 +27,8 @@ class ImageSizes(str, Enum):
     HD = "landscape_16_9"
     PORT = "portrait"
     LAND = "landscape"
+    WIDE = "wide"
+    ULTRA = "ultra"
 
 
 class ImageFormats(str, Enum):
