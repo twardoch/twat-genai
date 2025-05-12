@@ -7,9 +7,12 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any, Optional, Union
 
 from pydantic import BaseModel
+from PIL import Image  # Import PIL Image directly, not conditionally
+
+# Import core types used elsewhere, define EngineConfig in base.py
 
 if TYPE_CHECKING:
     from PIL import Image
@@ -22,6 +25,7 @@ NumInferenceSteps = int
 URLStr = str
 RequestID = str
 JsonDict = dict[str, Any]
+ImageSizeNames = Optional[list[str]]
 
 
 class ImageSizeWH(BaseModel):
@@ -29,6 +33,10 @@ class ImageSizeWH(BaseModel):
 
     width: int
     height: int
+
+
+# Type alias for combined size representation
+ImageSize = Union[ImageSizeNames, ImageSizeWH]
 
 
 class ImageInput(BaseModel):
@@ -47,13 +55,32 @@ class ImageInput(BaseModel):
             sum(1 for x in (self.url, self.path, self.pil_image) if x is not None) == 1
         )
 
-    async def to_url(self) -> str:
+    async def to_url(self, client=None) -> str:
         """Convert the input to a URL format.
 
-        This is an abstract method that should be implemented by specific engine handlers.
+        If the input is already a URL, return it directly.
+        For path and PIL image handling, the client object should be provided.
+
+        Args:
+            client: Optional API client for uploading images if needed.
+
+        Returns:
+            str: URL to the image.
+
+        Raises:
+            ValueError: If no valid input exists.
         """
-        msg = "to_url() must be implemented by a specific engine handler"
-        raise NotImplementedError(msg)
+        if self.url:
+            return self.url
+
+        # These cases require a client to handle uploads
+        if client is None:
+            msg = "Client required to convert path or PIL image to URL."
+            raise ValueError(msg)
+
+        # Actual implementation handled in specific engine adapter
+        msg = "Implementation should be provided by engine adapter"
+        raise ValueError(msg)
 
 
 class ImageResult(BaseModel):
@@ -68,3 +95,11 @@ class ImageResult(BaseModel):
     job_params: dict[str, Any] | None = None
 
     model_config = {"arbitrary_types_allowed": True}
+
+
+# EngineConfig is defined in engines/base.py to avoid circular imports
+# class EngineConfig(BaseModel):
+#     guidance_scale: float = 3.5
+#     num_inference_steps: int = 28
+#     image_size: ImageSize = ImageSizes.SQ
+#     enable_safety_checker: bool = False

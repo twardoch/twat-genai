@@ -7,21 +7,25 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from pydantic import BaseModel
 
-from ..core.image import ImageSizes
-
-if TYPE_CHECKING:
-    from ..core.config import ImageResult, ImageSizeWH
+# Import core types used by EngineConfig and the ABC
+from twat_genai.core.image import ImageSizes
+from twat_genai.core.config import ImageResult, ImageSizeWH
 
 
 class EngineConfig(BaseModel):
-    """Base configuration for image generation engines."""
+    """Base configuration for image generation engines.
+
+    This class defines the common configuration parameters applicable
+    across different image generation engines.
+    """
 
     guidance_scale: float = 3.5
     num_inference_steps: int = 28
+    # Use the Union type alias directly
     image_size: ImageSizes | ImageSizeWH = ImageSizes.SQ
     enable_safety_checker: bool = False
 
@@ -42,11 +46,12 @@ class ImageGenerationEngine(ABC):
 
         Args:
             prompt: Text prompt for image generation
-            config: Engine configuration
-            **kwargs: Additional engine-specific parameters
+            config: An instance of EngineConfig defined in this module.
+            **kwargs: Additional engine-specific parameters (e.g., image_config,
+                      upscale_config, lora_spec for specific engines).
 
         Returns:
-            Generated image result
+            Generated image result (ImageResult object from core.config)
         """
 
     @abstractmethod

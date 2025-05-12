@@ -42,13 +42,21 @@ classifiers = [
 # External packages required for the project to function
 dependencies = [
     "fal-client>=0.5.9", # FAL.ai client for AI operations
+    "fire>=0.5.0", # For building command-line interfaces (used by superres CLI)
     "httpx>=0.28.1", # HTTP client library
-    "numpy>=2.2.3", # Numerical computing library
-    "Pillow>=11.1.0", # Image processing library
-    "pydantic>=2.10.6", # Data validation using Python type annotations
+    "dotenv>=0.9.9", # Environment variable management
+    "loguru>=0.7.3", # Logging library
+    "numpy>=2.2.4", # Numerical computing library
+    "Pillow>=11.2.1", # Image processing library
+    "pydantic>=2.11.3", # Data validation using Python type annotations
     "python-slugify>=8.0.4", # Text slugification library
+    "requests>=2.31.0", # HTTP library (used by superres API client)
+    "rich>=13.7.0", # For rich text and beautiful formatting in the terminal (used by superres CLI)
+    "tqdm>=4.67.1", # Fast, extensible progress bar (used by superres)
     "twat>=1.8.1", # Main twat package
     "twat-image>=1.8.1", # Image handling functionality
+    "twat-fs>=2.7.5", # File system handling functionality
+    "twat-os>=2.7.5", # OS/path handling functionality
     "webcolors>=24.11.1", # Color name and value conversion
 
 ]
@@ -89,6 +97,8 @@ version-file = "src/twat_genai/__version__.py"
 dependencies = [
     "pytest", # Testing framework
     "pytest-cov", # Coverage reporting
+    "pytest-mock", # Mocking support
+    "pytest-asyncio", # Async test support
     "mypy>=1.15.0", # Static type checker
     "ruff>=0.9.6", # Fast Python linter
 
@@ -219,6 +229,8 @@ test = [
     "pytest-cov>=6.0.0",
     "pytest-xdist>=3.6.1", # For parallel test execution
     "pytest-benchmark[histogram]>=5.1.0", # For performance testing
+    "pytest-mock", # Mocking support
+    "pytest-asyncio", # Async test support
 
 ]
 dev = [
@@ -236,6 +248,7 @@ all = [
     "python-slugify>=8.0.4", # Text slugification
     "twat>=1.8.1", # Main package
     "twat-image>=1.8.1", # Image handling
+    "twat-os>=1.8.1", # OS/path handling
     "webcolors>=24.11.1", # Color utilities
 
 ]

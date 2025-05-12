@@ -7,15 +7,14 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Literal
 
-from fal.models import FALImageInput
-from pydantic import BaseModel, RootModel, model_validator
+from pydantic import BaseModel
 
-from ...core.config import ImageInput
+from twat_genai.core.config import ImageInput
 
 if TYPE_CHECKING:
-    from pathlib import Path
+    pass
 
 
 class ModelTypes(str, Enum):
@@ -26,91 +25,120 @@ class ModelTypes(str, Enum):
     CANNY = "fal-ai/flux-lora-canny"
     DEPTH = "fal-ai/flux-lora-depth"
 
+    # Upscalers from superres
+    UPSCALER_DRCT = "fal-ai/drct-super-resolution"
+    UPSCALER_IDEOGRAM = "fal-ai/ideogram/upscale"
+    UPSCALER_RECRAFT_CREATIVE = "fal-ai/recraft-creative-upscale"
+    UPSCALER_RECRAFT_CLARITY = "fal-ai/recraft-clarity-upscale"
+    UPSCALER_CCSR = "fal-ai/ccsr"
+    UPSCALER_ESRGAN = "fal-ai/esrgan"
+    UPSCALER_AURA_SR = "fal-ai/aura-sr"
+    UPSCALER_CLARITY = "fal-ai/clarity-upscaler"
+
+    # Outpainters
+    OUTPAINT_BRIA = "fal-ai/bria/expand"
+    OUTPAINT_FLUX = "fal-ai/flux-lora/inpainting"
+
 
 class ImageToImageConfig(BaseModel):
     """Configuration for image-to-image operations."""
 
     model_type: ModelTypes
-    input_image: FALImageInput
+    input_image: ImageInput
     strength: float = 0.75  # Only used for standard image-to-image
     negative_prompt: str = ""
 
-    @model_validator(mode="before")
-    @classmethod
-    def convert_image_input(cls, data: Any) -> Any:
-        """Convert ImageInput to FALImageInput if needed."""
-        if isinstance(data, dict) and "input_image" in data:
-            if isinstance(data["input_image"], ImageInput) and not isinstance(
-                data["input_image"], FALImageInput
-            ):
-                data["input_image"] = FALImageInput.from_base(data["input_image"])
-        return data
+
+# --- Upscaling Config ---
+class UpscaleConfig(BaseModel):
+    """Configuration specific to upscaling operations."""
+
+    input_image: ImageInput  # Required for upscaling
+    prompt: str | None = None
+    negative_prompt: str | None = None
+    seed: int | None = None
+    scale: float | None = None  # General scale, default depends on model
+
+    # --- Tool-specific parameters ---
+    # Ideogram
+    ideogram_resemblance: int | None = None
+    ideogram_detail: int | None = None
+    ideogram_expand_prompt: bool | None = None
+
+    # Recraft
+    recraft_sync_mode: bool | None = None
+
+    # Fooocus
+    fooocus_styles: list[str] | None = None
+    fooocus_performance: (
+        Literal["Speed", "Quality", "Extreme Speed", "Lightning"] | None
+    ) = None
+    fooocus_guidance_scale: float | None = None
+    fooocus_sharpness: float | None = None
+    fooocus_uov_method: (
+        Literal[
+            "Vary (Subtle)",
+            "Vary (Strong)",
+            "Upscale (1.5x)",
+            "Upscale (2x)",
+            "Upscale (Fast 2x)",
+        ]
+        | None
+    ) = None
+
+    # ESRGAN
+    esrgan_model: (
+        Literal[
+            "RealESRGAN_x4plus",
+            "RealESRGAN_x2plus",
+            "RealESRGAN_x4plus_anime_6B",
+            "RealESRGAN_x4_v3",
+            "RealESRGAN_x4_wdn_v3",
+            "RealESRGAN_x4_anime_v3",
+        ]
+        | None
+    ) = None
+    esrgan_tile: int | None = None
+    esrgan_face: bool | None = None
+
+    # Clarity / AuraSR (Shared params)
+    clarity_creativity: float | None = None  # (0.0 - 1.0)
+    clarity_resemblance: float | None = None  # (0.0 - 1.0)
+    clarity_guidance_scale: float | None = None
+    clarity_num_inference_steps: int | None = None
+
+    # CCSR
+    ccsr_scale: int | None = None
+    ccsr_tile_diffusion: Literal["none", "mix", "gaussian"] | None = None
+    ccsr_color_fix_type: Literal["none", "wavelet", "adain"] | None = None
+    ccsr_steps: int | None = None
 
 
-class LoraRecord(BaseModel):
-    """Single LoRA record with URL and scale."""
+# --- Outpainting Config ---
+class OutpaintConfig(BaseModel):
+    """Configuration specific to outpainting operations."""
 
-    url: str
-    scale: float = 1.0
-
-
-class LoraRecordList(RootModel[list[LoraRecord]]):
-    """List of LoRA records."""
-
-
-class LoraLib(RootModel[dict[str, LoraRecordList]]):
-    """Library of LoRA configurations."""
-
-
-class LoraSpecEntry(BaseModel):
-    """Single LoRA specification for inference."""
-
-    path: str
-    scale: float = 1.0
-    prompt: str = ""
-
-
-class CombinedLoraSpecEntry(BaseModel):
-    """Combined specification of multiple LoRA entries."""
-
-    entries: list[LoraSpecEntry | CombinedLoraSpecEntry]
-    factory_key: str | None = None
-
-
-class FALJobConfig(BaseModel):
-    """Configuration for a FAL image generation job."""
-
+    input_image: ImageInput  # Required for outpainting
     prompt: str
-    original_prompt: str
-    model: ModelTypes = ModelTypes.TEXT
-    lora_spec: str | list | tuple | None = None
-    output_dir: Path | None = None
-    filename_suffix: str | None = None
-    filename_prefix: str | None = None
-    image_config: ImageToImageConfig | None = None
+    target_width: int
+    target_height: int
+    num_images: int = 1
+    outpaint_tool: Literal["bria", "flux"] = (
+        "bria"  # Default to bria for backward compatibility
+    )
+    # Extra parameters for flux outpainting
+    guidance_scale: float | None = None  # Flux-specific
+    num_inference_steps: int | None = None  # Flux-specific
+    negative_prompt: str | None = None  # Flux-specific
+    enable_safety_checker: bool | None = None  # Flux-specific
+    border_thickness_factor: float = (
+        0.05  # Border thickness for GenFill post-processing
+    )
 
-    async def to_fal_arguments(self) -> dict[str, Any]:
-        """Convert job config to FAL API arguments."""
-        from fal.lora import build_lora_arguments  # Avoid circular import
+    # Note: original_image_size and original_image_location are typically calculated
+    # just before the API call based on the input_image dimensions and target size.
+    # They are not stored here directly.
 
-        lora_list, final_prompt = await build_lora_arguments(
-            self.lora_spec, self.prompt
-        )
 
-        args = {
-            "loras": lora_list,
-            "prompt": final_prompt,
-            "num_images": 1,
-            "output_format": "jpeg",
-            "enable_safety_checker": False,
-        }
-
-        if self.model != ModelTypes.TEXT and self.image_config:
-            image_url = await self.image_config.input_image.to_url()
-            args["image_url"] = image_url
-            if self.model == ModelTypes.IMAGE:
-                args["strength"] = self.image_config.strength
-            if self.image_config.negative_prompt:
-                args["negative_prompt"] = self.image_config.negative_prompt
-
-        return args
+# --- Lora Handling (Moved to core/lora.py) ---
+# TODO: Confirm all LoRA logic/models are removed from here and __main__.py

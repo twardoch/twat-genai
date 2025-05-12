@@ -64,3 +64,11 @@ class ImageResult(BaseModel):
 # Type aliases
 ImageSize = Union[ImageSizes, ImageSizeWH]
 OutputDir = Optional[Path]
+
+
+class TextToImageResponse(BaseModel):
+    id: str
+    status: str
+    output: list[str | ImageOutput] | None = None
+    error: str | None = None
+    logs: str | None = None

@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from PIL import Image
+from loguru import logger
 
 
 class ImageSizes(str, Enum):
@@ -24,6 +25,8 @@ class ImageSizes(str, Enum):
     HDV = "portrait_16_9"
     SD = "landscape_4_3"
     HD = "landscape_16_9"
+    PORT = "portrait"
+    LAND = "landscape"
 
 
 class ImageFormats(str, Enum):
@@ -34,14 +37,57 @@ class ImageFormats(str, Enum):
     PIL = "pil"
 
 
+# Add ImageSizeWH class for compatibility with code that imports it from here
+from pydantic import BaseModel
+
+
+class ImageSizeWH(BaseModel):
+    """Width and height for a custom image size."""
+
+    width: int
+    height: int
+
+
 async def save_image(
     image: Image.Image,
-    output_path: Path,
-    format: ImageFormats = ImageFormats.JPG,
+    path: str | Path,
+    img_format: ImageFormats | None = None,
     quality: int = 95,
 ) -> None:
-    """Save an image to disk with the specified format and quality."""
-    image.save(output_path, format=format.value, quality=quality)
+    """Save an image to disk."""
+    save_kwargs = {"quality": quality}
+    format_str: str | None = None
+    if img_format:
+        format_str = img_format.value
+        save_kwargs["format"] = format_str
+    else:
+        pass
+
+    try:
+        logger.debug(
+            f"Saving image to {path} with format '{format_str}' and args: {save_kwargs}"
+        )
+        image.save(path, **save_kwargs)
+        logger.info(f"Saved image to {path}")
+    except KeyError:
+        logger.warning(
+            f"Unknown format enum {img_format} ('{format_str}'), saving without explicit format."
+        )
+        save_kwargs.pop("format", None)
+        try:
+            image.save(path, format=None, quality=quality)
+        except Exception as e_inner:
+            logger.error(
+                f"Failed to save image {path} even without format: {e_inner}",
+                exc_info=True,
+            )
+            msg = f"Failed to save image {path}"
+            raise RuntimeError(msg) from e_inner
+
+    except Exception as e:
+        logger.error(f"Failed to save image to {path}: {e}", exc_info=True)
+        msg = f"Failed to save image to {path}"
+        raise RuntimeError(msg) from e
 
 
 def validate_image_size(size_str: str) -> tuple[int, int] | None:
@@ -57,3 +103,8 @@ def validate_image_size(size_str: str) -> tuple[int, int] | None:
         return w, h
     except (ValueError, TypeError):
         return None
+
+
+# Removed the placeholder load_image added in previous step
+# def load_image(source: str | Path | Image.Image) -> Image.Image:
+#     pass

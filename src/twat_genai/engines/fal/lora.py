@@ -7,10 +7,27 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
-from fal.config import CombinedLoraSpecEntry, LoraLib, LoraSpecEntry
+# Import from core
+# from fal.config import CombinedLoraSpecEntry, LoraLib, LoraSpecEntry # OLD import
+from twat_genai.core.lora import (
+    CombinedLoraSpecEntry,
+    LoraLib,
+    LoraSpecEntry,  # Import LoraRecord needed by LoraLib usage in get_lora_lib
+)
+
 from loguru import logger
-from twat.paths import PathManager
+
+# Try importing PathManager, handle optional dependency
+try:
+    from twat_os.paths import PathManager
+except ImportError:
+    PathManager = None
+    logger.warning(
+        "'twat' package not fully available. PathManager features disabled."
+        " LoRA library resolution will use defaults."
+    )
 
 
 def get_lora_lib() -> LoraLib:
@@ -18,11 +35,9 @@ def get_lora_lib() -> LoraLib:
 
     Priority:
     1. User-provided location (via environment variable)
-    2. Central path management
+    2. Central path management (if available)
     3. Bundled default library
     """
-    paths = PathManager.for_package("twat_genai")
-
     # Check for user-provided location
     import os
 
@@ -32,10 +47,17 @@ def get_lora_lib() -> LoraLib:
         if lib_path.exists():
             return LoraLib.model_validate_json(lib_path.read_text())
 
-    # Check central path management
-    lib_path = paths.genai.lora_dir / "loras.json"
-    if lib_path.exists():
-        return LoraLib.model_validate_json(lib_path.read_text())
+    # Check central path management if available
+    if PathManager:
+        try:
+            paths = PathManager.for_package("twat_genai")
+            lib_path = paths.genai.lora_dir / "loras.json"
+            if lib_path.exists():
+                return LoraLib.model_validate_json(lib_path.read_text())
+        except (AttributeError, Exception) as e:
+            logger.warning(
+                f"Error using PathManager for LoRA library: {e}. Using bundled library."
+            )
 
     # Fall back to bundled library
     bundled_path = Path(__file__).parent.parent.parent / "__main___loras.json"
@@ -79,7 +101,7 @@ def parse_lora_phrase(phrase: str) -> LoraSpecEntry | CombinedLoraSpecEntry:
             scale = float(scale_str.strip())
         except ValueError:
             msg = f"Invalid scale value in LoRA phrase: {phrase}"
-            raise ValueError(msg)
+            raise ValueError(msg) from None
     else:
         identifier = phrase
         scale = 1.0
@@ -152,7 +174,7 @@ def normalize_lora_spec(
 
 async def build_lora_arguments(
     lora_spec: str | list | tuple | None, prompt: str
-) -> tuple[list[dict[str, str | float]], str]:
+) -> tuple[list[dict[str, Any]], str]:
     """
     Build the list of inference LoRA dictionaries and a final prompt.
 
@@ -164,7 +186,7 @@ async def build_lora_arguments(
         Tuple of (LoRA argument list, final prompt)
     """
     entries = normalize_lora_spec(lora_spec)
-    lora_list: list[dict[str, str | float]] = []
+    lora_list: list[dict[str, Any]] = []
     prompt_prefixes: list[str] = []
 
     def process_entry(entry: LoraSpecEntry | CombinedLoraSpecEntry) -> None:
