@@ -255,7 +255,7 @@ class TwatGenAiCLI:
 
         return results
 
-    def text(self, prompts: str | list[str] = "", output: str | None = None) -> None:
+    async def text(self, prompts: str | list[str] = "", output: str | None = None) -> None:
         """Generate images from text prompts.
 
         Args:
@@ -266,14 +266,12 @@ class TwatGenAiCLI:
             msg = "Prompts are required for text generation."
             raise ValueError(msg)
 
-        import asyncio
-
-        results = asyncio.run(
-            self._run_generation(prompts, ModelTypes.TEXT, output_subdirectory=output)
+        results = await self._run_generation(
+            prompts, ModelTypes.TEXT, output_subdirectory=output
         )
         self._print_results(results)
 
-    def image(
+    async def image(
         self,
         input_image: str,
         prompts: str | list[str] = "",
@@ -303,18 +301,16 @@ class TwatGenAiCLI:
             model_type=ModelTypes.IMAGE,
         )
 
-        results = asyncio.run(
-            self._run_generation(
-                prompts,
-                ModelTypes.IMAGE,
+        results = await self._run_generation(
+            prompts,
+            ModelTypes.IMAGE,
                 image_config=i2i_config,
                 output_subdirectory=output,
                 input_image_path=input_img.path,
             )
-        )
         self._print_results(results)
 
-    def canny(
+    async def canny(
         self,
         input_image: str,
         prompts: str | list[str] = "",
@@ -342,18 +338,16 @@ class TwatGenAiCLI:
             model_type=ModelTypes.CANNY,
         )
 
-        results = asyncio.run(
-            self._run_generation(
-                prompts,
-                ModelTypes.CANNY,
+        results = await self._run_generation(
+            prompts,
+            ModelTypes.CANNY,
                 image_config=i2i_config,
                 output_subdirectory=output,
                 input_image_path=input_img.path,
             )
-        )
         self._print_results(results)
 
-    def depth(
+    async def depth(
         self,
         input_image: str,
         prompts: str | list[str] = "",
@@ -381,18 +375,16 @@ class TwatGenAiCLI:
             model_type=ModelTypes.DEPTH,
         )
 
-        results = asyncio.run(
-            self._run_generation(
-                prompts,
-                ModelTypes.DEPTH,
+        results = await self._run_generation(
+            prompts,
+            ModelTypes.DEPTH,
                 image_config=i2i_config,
                 output_subdirectory=output,
                 input_image_path=input_img.path,
             )
-        )
         self._print_results(results)
 
-    def upscale(
+    async def upscale(
         self,
         input_image: str,
         tool: Literal[
@@ -465,61 +457,74 @@ class TwatGenAiCLI:
         # Ideogram params
         elif tool == "ideogram":
             if ideogram_detail is not None:
-                upscale_kwargs["detail"] = ideogram_detail
+                upscale_kwargs["ideogram_detail"] = ideogram_detail # Corrected key
+            if resemblance is not None: # Added resemblance for ideogram
+                upscale_kwargs["ideogram_resemblance"] = resemblance
 
         # Recraft params (common between clarity/creative)
         elif tool in ("recraft_clarity", "recraft_creative"):
-            if scale is not None:
+            if scale is not None: # General scale might apply here
                 upscale_kwargs["scale"] = scale
+            # Add sync_mode if it's a relevant CLI param for recraft
+            # Example: upscale_kwargs["recraft_sync_mode"] = some_cli_param
 
         # ESRGAN params
         elif tool == "esrgan":
             if esrgan_model is not None:
-                upscale_kwargs["model"] = esrgan_model
+                upscale_kwargs["esrgan_model"] = esrgan_model # Corrected key
             if esrgan_tile is not None:
-                upscale_kwargs["tile"] = esrgan_tile
+                upscale_kwargs["esrgan_tile"] = esrgan_tile # Corrected key
+            # Add esrgan_face if it's a CLI param:
+            # Example: upscale_kwargs["esrgan_face"] = some_cli_param_for_face
 
         # Aura SR params
         elif tool == "aura_sr":
             if scale is not None:
                 upscale_kwargs["scale"] = scale
             if resemblance is not None:
-                upscale_kwargs["resemblance"] = resemblance
+                upscale_kwargs["clarity_resemblance"] = resemblance # Aura uses clarity resemblance
+            if clarity_creativity is not None: # Aura uses clarity creativity
+                upscale_kwargs["clarity_creativity"] = clarity_creativity
+            # Add other Aura SR specific params from CLI if available
 
         # Clarity params
         elif tool == "clarity":
+            if scale is not None: # Clarity can also take a general scale
+                upscale_kwargs["scale"] = scale
             if clarity_creativity is not None:
-                upscale_kwargs["creativity"] = clarity_creativity
+                upscale_kwargs["clarity_creativity"] = clarity_creativity
+            if resemblance is not None: # Added resemblance for clarity
+                upscale_kwargs["clarity_resemblance"] = resemblance
             if clarity_guidance_scale is not None:
-                upscale_kwargs["guidance_scale"] = clarity_guidance_scale
+                upscale_kwargs["clarity_guidance_scale"] = clarity_guidance_scale
             if clarity_num_inference_steps is not None:
-                upscale_kwargs["num_inference_steps"] = clarity_num_inference_steps
+                upscale_kwargs["clarity_num_inference_steps"] = clarity_num_inference_steps
 
         # CCSR params
         elif tool == "ccsr":
             if ccsr_scale is not None:
-                upscale_kwargs["scale"] = ccsr_scale
+                upscale_kwargs["ccsr_scale"] = ccsr_scale # Corrected key
+            else: # Fallback to general scale for CCSR if ccsr_scale not given
+                upscale_kwargs["scale"] = scale
             if ccsr_tile_diffusion is not None:
-                upscale_kwargs["tile_diffusion"] = ccsr_tile_diffusion
+                upscale_kwargs["ccsr_tile_diffusion"] = ccsr_tile_diffusion # Corrected key
             if ccsr_color_fix_type is not None:
-                upscale_kwargs["color_fix_type"] = ccsr_color_fix_type
+                upscale_kwargs["ccsr_color_fix_type"] = ccsr_color_fix_type # Corrected key
             if ccsr_steps is not None:
-                upscale_kwargs["steps"] = ccsr_steps
+                upscale_kwargs["ccsr_steps"] = ccsr_steps # Corrected key
 
-        upscale_config = UpscaleConfig(input_image=input_img, **upscale_kwargs)
+        upscale_config = UpscaleConfig(input_image=input_img, prompt=prompts if isinstance(prompts, str) else "; ".join(prompts), negative_prompt=self.negative_prompt or None, **upscale_kwargs)
 
-        results = asyncio.run(
-            self._run_generation(
-                prompts,
-                upscaler,
+        results = await self._run_generation(
+            prompts,
+            upscaler,
                 upscale_config=upscale_config,
                 output_subdirectory=output,
                 input_image_path=input_img.path,
             )
-        )
         self._print_results(results)
 
-    def outpaint(
+    async def outpaint(
         self,
         input_image: str,
         prompts: str | list[str],
@@ -598,15 +603,13 @@ class TwatGenAiCLI:
         # Create OutpaintConfig
         outpaint_config = OutpaintConfig(**outpaint_kwargs)
 
-        results = asyncio.run(
-            self._run_generation(
-                prompts,
-                model_type,
+        results = await self._run_generation(
+            prompts,
+            model_type,
                 outpaint_config=outpaint_config,
                 output_subdirectory=output,
                 input_image_path=input_img.path,
             )
-        )
         self._print_results(results)
 
     def _print_results(self, results: list[ImageResult]) -> None:

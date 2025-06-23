@@ -39,17 +39,6 @@ class ImageFormats(str, Enum):
     PIL = "pil"
 
 
-# Add ImageSizeWH class for compatibility with code that imports it from here
-from pydantic import BaseModel
-
-
-class ImageSizeWH(BaseModel):
-    """Width and height for a custom image size."""
-
-    width: int
-    height: int
-
-
 async def save_image(
     image: Image.Image,
     path: str | Path,

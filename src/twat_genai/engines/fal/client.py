@@ -431,7 +431,8 @@ class FalApiClient:
             image_size = kwargs.pop("image_size")
             if image_size is not None:
                 # Import required types here to avoid circular imports
-                from twat_genai.core.image import ImageSizes, ImageSizeWH
+                from twat_genai.core.image import ImageSizes
+                from twat_genai.core.config import ImageSizeWH
 
                 if isinstance(image_size, ImageSizeWH):
                     fal_args["width"] = image_size.width
@@ -472,8 +473,15 @@ class FalApiClient:
         if lora_spec:
             from twat_genai.engines.fal.lora import build_lora_arguments
 
-            lora_args = build_lora_arguments(lora_spec)
+            # Pass the prompt to build_lora_arguments
+            lora_args, augmented_prompt = build_lora_arguments(lora_spec, prompt)
             fal_args.update(lora_args)
+            # Use the augmented prompt if LoRAs modified it
+            if augmented_prompt != prompt:
+                logger.debug(f"Prompt augmented by LoRA: {augmented_prompt}")
+                fal_args["prompt"] = augmented_prompt
+            else:
+                fal_args["prompt"] = prompt # Ensure prompt is still there if not augmented
 
         logger.debug(f"Final FAL arguments: {fal_args}")
 

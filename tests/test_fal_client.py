@@ -2,13 +2,14 @@
 """Tests for the FAL API Client and its helpers."""
 
 import pytest
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, MagicMock # Added MagicMock
 from pathlib import Path
 from typing import Any, cast
 from collections.abc import Callable
 
+from twat_genai.core.config import ImageResult
 from twat_genai.engines.fal.client import FalApiClient
-from twat_genai.engines.fal.types import ModelTypes, ImageResult
+from twat_genai.engines.fal.config import ModelTypes
 
 # --- Tests for _extract_generic_image_info (Instance Method) ---
 
@@ -736,10 +737,10 @@ def mock_fal_client(mocker: Mock) -> FalApiClient:
 
 
 @pytest.fixture
-def mock_build_lora_arguments(mocker: Mock) -> AsyncMock:
+def mock_build_lora_arguments(mocker: Mock) -> MagicMock: # Changed to MagicMock
     """Fixture to mock build_lora_arguments."""
     mock = mocker.patch(
-        "twat_genai.engines.fal.lora.build_lora_arguments", new_callable=AsyncMock
+        "twat_genai.engines.fal.lora.build_lora_arguments", new_callable=MagicMock # Changed to MagicMock
     )
     # Default return: no loras, original prompt
     mock.return_value = ([], "test prompt")
