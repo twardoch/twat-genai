@@ -1,0 +1,22 @@
+[
+  {
+    "fileName": "main-overview.mdc",
+    "description": "Complete system overview detailing the AI image generation pipeline architecture, core components, and their interactions"
+  },
+  {
+    "fileName": "image-generation-pipeline.mdc",
+    "description": "Detailed documentation of the multi-stage image generation process, including text-to-image, image-to-image, upscaling, and outpainting workflows"
+  },
+  {
+    "fileName": "lora-integration.mdc",
+    "description": "Comprehensive documentation of the LoRA (Low-Rank Adaptation) implementation, including parsing, validation, and application logic"
+  },
+  {
+    "fileName": "prompt-processing-system.mdc",
+    "description": "Technical details of the prompt processing system, including syntax parsing, weighting, batching, and parameter injection mechanisms"
+  },
+  {
+    "fileName": "image-transformation-algorithms.mdc",
+    "description": "Detailed documentation of image manipulation algorithms, including outpainting logic, size management, and upscaling implementations"
+  }
+]

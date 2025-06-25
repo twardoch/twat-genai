@@ -18,8 +18,7 @@ from collections.abc import Callable
 import httpx
 from slugify import slugify
 from loguru import logger
-from datetime import datetime, timezone
-import asyncio
+from datetime import datetime
 import json
 import time
 
@@ -30,7 +29,6 @@ from twat_genai.core.config import ImageResult
 # Import ModelTypes, the unified enum
 # from fal.config import ModelTypes
 from twat_genai.engines.fal.config import ModelTypes
-from twat_genai.engines.fal.lora import build_lora_arguments
 
 # Logging setup
 # TODO: Adapt logging to use loguru
@@ -337,8 +335,8 @@ class FalApiClient:
                 job_params=job_params,
             )
         except Exception as e:
-            logger.error(f"Outpaint process failed: {e!r}", exc_info=True)
-            msg = f"Outpaint process failed: {e!r}"
+            logger.error("Outpaint process failed: {}", repr(e), exc_info=True)
+            msg = f"Outpaint process failed: {repr(e)}"
             raise RuntimeError(msg) from e
 
     async def process_depth(
@@ -776,10 +774,10 @@ class FalApiClient:
             try:
                 # Try to access the error details, which might be a list of dicts or a string
                 error_details = e.args[0] if e.args else str(e)
-                logger.error(f"FAL API error: {error_details!r}")
+                logger.error("FAL API error: {}", repr(error_details))
             except Exception as nested:
                 # If there's an issue accessing/formatting the error, use a safer repr
-                logger.error(f"FAL API error (details unavailable): {repr(e)}")
+                logger.error("FAL API error (details unavailable): {}", repr(e))
 
             # Re-raise with a more readable message
             raise RuntimeError(f"FAL API error: {repr(e)}") from e

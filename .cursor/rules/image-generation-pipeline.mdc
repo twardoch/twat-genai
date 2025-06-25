@@ -1,0 +1,52 @@
+---
+description: Documentation and analysis focused on multi-stage image generation pipelines including text-to-image, upscaling, and outpainting workflows
+globs: src/twat_genai/engines/fal/**/*.py,src/twat_genai/core/prompt.py,src/twat_genai/core/image*.py
+alwaysApply: false
+---
+
+
+# image-generation-pipeline
+
+The image generation pipeline implements a multi-stage workflow for AI image creation and manipulation:
+
+## Core Pipeline Stages (Importance: 95)
+`src/twat_genai/engines/fal/__init__.py`
+- Text-to-Image generation
+- Image-to-Image transformation 
+- Upscaling enhancement
+- Outpainting expansion
+- Temporary artifact management between stages
+
+## Outpainting System (Importance: 85)
+`src/twat_genai/engines/fal/outpaint.py`
+- Bria algorithm: Direct canvas expansion with original image placement
+- Flux algorithm: Inpainting-based approach using masking
+- Border generation with dynamic thickness calculation
+- GenFill post-processing for seamless transitions
+
+## Upscaling Logic (Importance: 80)
+`src/twat_genai/engines/fal/upscale.py`
+- Model-specific size constraints:
+  - ESRGAN: 2048x2048 max
+  - Ideogram: 1024x1024 max
+  - CCSR: 512x512 max
+- Tool-specific parameter mapping for 8 distinct algorithms
+
+## Prompt Processing (Importance: 90)
+`src/twat_genai/core/prompt.py`
+- Domain-specific prompt expansion system
+- Midjourney-style syntax support
+- Weighted prompt segments using "::" delimiter
+- Multi-prompt batching capabilities
+- Parameter injection with "--" prefix
+- Permutation generation using "{}" syntax
+
+## Image Size Management (Importance: 75)
+`src/twat_genai/core/image.py`
+- Model-specific input validation
+- Automatic resizing based on model constraints
+- Context preservation during transformations
+
+$END$
+
+ If you're using this file in context, clearly say in italics in one small line that "Context added by Giga image-generation-pipeline".
