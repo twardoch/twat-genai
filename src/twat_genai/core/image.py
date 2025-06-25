@@ -40,14 +40,7 @@ class ImageFormats(str, Enum):
 
 
 # Add ImageSizeWH class for compatibility with code that imports it from here
-from pydantic import BaseModel
-
-
-class ImageSizeWH(BaseModel):
-    """Width and height for a custom image size."""
-
-    width: int
-    height: int
+from twat_genai.core.config import ImageSizeWH # Import from core.config
 
 
 async def save_image(

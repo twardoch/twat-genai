@@ -22,14 +22,21 @@ async def test_download_image_to_temp_success(mocker):
     "Test successful download to a temporary file."
     # Mock httpx response
     mock_response = AsyncMock()
-    mock_response.content = b"fake image data"
-    mock_response.headers = {"content-type": "image/jpeg"}
-    mock_response.raise_for_status = MagicMock()
+    mock_response.content = b"fake image data"  # This is fine for AsyncMock if not directly awaited
+    mock_response.headers = {"content-type": "image/jpeg"} # This needs to be a direct dict
+    mock_response.raise_for_status = MagicMock() # This is fine
 
-    # Mock httpx client
-    mock_client = AsyncMock()
-    mock_client.get.return_value = mock_response
-    mock_async_client = mocker.patch("httpx.AsyncClient", return_value=mock_client)
+    # Mock httpx client's get method
+    async def mock_get(*args, **kwargs):
+        return mock_response
+
+    mock_client_instance = AsyncMock()
+    mock_client_instance.get = mock_get
+
+    mock_async_client_context_manager = AsyncMock()
+    mock_async_client_context_manager.__aenter__.return_value = mock_client_instance # mock client instance
+
+    mocker.patch("httpx.AsyncClient", return_value=mock_async_client_context_manager)
 
     # Mock tempfile
     mock_named_temp_file = mocker.patch("tempfile.NamedTemporaryFile")
@@ -77,17 +84,25 @@ async def test_download_image_success(mocker, tmp_path):
 
     # Mock httpx response
     mock_response = AsyncMock()
-    mock_response.content = b"fake png data"
-    mock_response.headers = {"content-type": "image/png"}
+    mock_response.content = b"fake png data" # direct assignment for read by write_bytes
+    mock_response.headers = {"content-type": "image/png"} # direct dict
     mock_response.raise_for_status = MagicMock()
 
-    mock_client = AsyncMock()
-    mock_client.get.return_value = mock_response
-    mocker.patch("httpx.AsyncClient", return_value=mock_client)
+    # Mock httpx client's get method
+    async def mock_get(*args, **kwargs):
+        return mock_response
+
+    mock_client_instance = AsyncMock()
+    mock_client_instance.get = mock_get
+
+    mock_async_client_context_manager = AsyncMock()
+    mock_async_client_context_manager.__aenter__.return_value = mock_client_instance
+
+    mocker.patch("httpx.AsyncClient", return_value=mock_async_client_context_manager)
 
     await download_image("http://fake.url/img.png", output_path)
 
-    mock_client.get.assert_called_once_with(
+    mock_client_instance.get.assert_called_once_with( # Check call on the instance
         "http://fake.url/img.png", follow_redirects=True
     )
     assert output_path.exists()
@@ -109,11 +124,21 @@ def dummy_image_file(tmp_path):
 # Mock the UPSCALE_TOOL_MAX_INPUT_SIZES for testing
 @pytest.fixture(autouse=True)
 def mock_upscale_sizes(mocker):
+    # Patch the location where UPSCALE_TOOL_MAX_INPUT_SIZES is now defined
     mocker.patch(
-        "twat_genai.core.image_utils.UPSCALE_TOOL_MAX_INPUT_SIZES",
+        "twat_genai.engines.fal.config.UPSCALE_TOOL_MAX_INPUT_SIZES",
         {ModelTypes.UPSCALER_DRCT: 2048, ModelTypes.UPSCALER_ESRGAN: 1024},
     )
+    # Also need to update the import reference within image_utils.py if it's direct,
+    # or ensure image_utils.py gets it from the new location.
+    # For the test, we assume image_utils.py will correctly access the patched dict.
+    # If image_utils.py imports it directly as:
+    # `from twat_genai.engines.fal.config import UPSCALE_TOOL_MAX_INPUT_SIZES`
+    # then this patch is correct.
 
+    # If image_utils.py had its own copy or imported from the old upscale.py,
+    # this patch target would need to change to where image_utils *sees* it.
+    # Based on the plan, image_utils.py should be updated to import from engines.fal.config.
 
 def test_resize_needed(dummy_image_file):
     "Test when resizing is needed."

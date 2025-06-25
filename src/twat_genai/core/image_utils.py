@@ -17,8 +17,8 @@ from loguru import logger  # Changed from logging
 from PIL import Image, ImageDraw
 
 # Import definitions from within the package
-from twat_genai.engines.fal.upscale import UPSCALE_TOOL_MAX_INPUT_SIZES
-from twat_genai.engines.fal.config import ModelTypes
+# UPSCALE_TOOL_MAX_INPUT_SIZES is now in engines.fal.config
+from twat_genai.engines.fal.config import ModelTypes, UPSCALE_TOOL_MAX_INPUT_SIZES
 
 
 def resize_image_if_needed(image_path: str, model_type: ModelTypes) -> str | None:

@@ -472,8 +472,11 @@ class FalApiClient:
         if lora_spec:
             from twat_genai.engines.fal.lora import build_lora_arguments
 
-            lora_args = build_lora_arguments(lora_spec)
-            fal_args.update(lora_args)
+            # build_lora_arguments is async and expects prompt
+            lora_list, final_prompt = await build_lora_arguments(lora_spec, prompt)
+            if lora_list:
+                fal_args["loras"] = lora_list # FAL expects "loras" key
+            fal_args["prompt"] = final_prompt # Update prompt with LoRA triggers
 
         logger.debug(f"Final FAL arguments: {fal_args}")
 
