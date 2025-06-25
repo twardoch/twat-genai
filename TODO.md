@@ -1,18 +1,28 @@
-# TODO
-
-## 1. Increase Test Coverage
-
-- Add more unit tests for core functionalities (image processing, prompt handling, config parsing).
-- Implement integration tests for the engines, especially Fal, to ensure proper interaction with external APIs.
-- Introduce end-to-end tests for key workflows (e.g., generating an image with a specific prompt and model).
-
-## 2. Enhance Error Handling
-
-- Implement more specific exception types for different error scenarios (e.g., API errors, file handling errors, invalid input).
-- Improve error messaging to provide more informative details for debugging.
-- Gracefully handle API rate limits and network issues with retries and backoffs.
-
-## 3. Improve Logging
-
-- Consistently integrate `loguru` to record events and errors.
-- Log important steps in the generation process, including input parameters, engine calls, and output results.
+- [ ] **Project Setup & Initial Cleanup:**
+    - [x] Verify `npc-engine` installation or proceed with manual analysis (Proceeding manually)
+    - [x] Create `PLAN.md`
+    - [x] Create `TODO.md` (or update if existing)
+    - [x] Create `CHANGELOG.md`
+- [ ] **Address Code Duplication and Unused Code:**
+    - [ ] **`core/models.py`**: Investigate and remove if redundant.
+    - [ ] **`engines/fal/config.py`**: Remove duplicate `FalApiClient`.
+    - [ ] **`ImageSizeWH`**: Consolidate definition to `core/config.py`.
+    - [ ] **Unused `run_upscale`/`run_outpaint`**: Remove if truly unused.
+- [ ] **Streamline Configuration and Core Logic:**
+    - [ ] **Output Directory Logic (`cli.py`)**: Simplify, potentially remove `PathManager` dependency for MVP.
+    - [ ] **CLI Async Structure (`cli.py`)**: Evaluate refactoring (minor).
+- [ ] **Review and Refine CLI Arguments and Commands:**
+    - [ ] **Upscale Tool Parameters (`cli.py`)**: Assess if simplification is needed (assume current is fine for now).
+    - [ ] **Default Prompts for Upscalers (`cli.py`)**: Confirm behavior.
+- [ ] **Documentation and Helper Scripts:**
+    - [ ] **`README.md`**: Update to reflect changes.
+    - [ ] **`cleanup.py`**: Decide on its role/necessity for MVP.
+    - [ ] **LoRA Configuration**: Review and ensure robustness.
+- [ ] **Testing:**
+    - [ ] Ensure existing tests pass.
+    - [ ] Add/modify tests for significant changes.
+- [ ] **Final Review and Submission:**
+    - [ ] Final code review.
+    - [ ] Update `PLAN.md` and `TODO.md`.
+    - [ ] Update `CHANGELOG.md`.
+    - [ ] Submit.
