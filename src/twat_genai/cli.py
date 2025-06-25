@@ -13,16 +13,6 @@ from typing import get_args, Any, cast, Literal
 import fire
 from loguru import logger
 
-# Try importing PathManager, handle optional dependency
-try:
-    from twat_os.paths import PathManager
-except ImportError:
-    PathManager = None
-    logger.warning(
-        "'twat' package not fully available. PathManager features disabled."
-        " Output directory resolution will use defaults."
-    )
-
 from twat_genai.core.config import ImageInput, ImageResult, ImageSizeWH
 from twat_genai.core.image import ImageSizes
 from twat_genai.core.prompt import normalize_prompts
@@ -89,20 +79,6 @@ def get_output_dir(
         parent_dir = input_image_path.parent
         basename = input_image_path.stem
         base_dir = (parent_dir / basename).resolve()
-    elif PathManager:
-        try:
-            paths = PathManager.for_package("twat_genai")
-            if paths.genai.output_dir:
-                base_dir = paths.genai.output_dir.resolve()
-            else:
-                # Default to 'generated_images' in current directory
-                base_dir = Path("generated_images").resolve()
-        except (AttributeError, Exception) as e:
-            logger.warning(
-                f"Error using PathManager for output directory: {e}. Using default directory."
-            )
-            # Default to 'generated_images' in current directory
-            base_dir = Path("generated_images").resolve()
     else:
         # Default to 'generated_images' in current directory
         base_dir = Path("generated_images").resolve()
@@ -273,7 +249,7 @@ class TwatGenAiCLI:
         )
         self._print_results(results)
 
-    def image(
+    async def image( # Changed to async
         self,
         input_image: str,
         prompts: str | list[str] = "",
@@ -288,7 +264,7 @@ class TwatGenAiCLI:
             strength: How much influence the prompt should have over the image (0-1)
             output: Optional subdirectory for output files
         """
-        import asyncio
+        # import asyncio # No longer needed here
 
         input_img = self._prepare_image_input(input_image)
         if not input_img:
@@ -303,23 +279,21 @@ class TwatGenAiCLI:
             model_type=ModelTypes.IMAGE,
         )
 
-        results = asyncio.run(
-            self._run_generation(
-                prompts,
-                ModelTypes.IMAGE,
-                image_config=i2i_config,
-                output_subdirectory=output,
-                input_image_path=input_img.path,
-            )
+        results = await self._run_generation( # await here
+            prompts,
+            ModelTypes.IMAGE,
+            image_config=i2i_config,
+            output_subdirectory=output,
+            input_image_path=input_img.path,
         )
         self._print_results(results)
 
-    def canny(
+    async def canny( # Changed to async
         self,
         input_image: str,
         prompts: str | list[str] = "",
         output: str | None = None,
-    ) -> None:
+    ) -> None: # Return type is None, but it's an async def
         """Generate images using the Canny edge detection version of the input image.
 
         Args:
@@ -327,7 +301,7 @@ class TwatGenAiCLI:
             prompts: One or more text prompts for generation
             output: Optional subdirectory for output files
         """
-        import asyncio
+        # import asyncio # No longer needed here
 
         input_img = self._prepare_image_input(input_image)
         if not input_img:
@@ -342,23 +316,21 @@ class TwatGenAiCLI:
             model_type=ModelTypes.CANNY,
         )
 
-        results = asyncio.run(
-            self._run_generation(
-                prompts,
-                ModelTypes.CANNY,
-                image_config=i2i_config,
-                output_subdirectory=output,
-                input_image_path=input_img.path,
-            )
+        results = await self._run_generation( # await here
+            prompts,
+            ModelTypes.CANNY,
+            image_config=i2i_config,
+            output_subdirectory=output,
+            input_image_path=input_img.path,
         )
         self._print_results(results)
 
-    def depth(
+    async def depth( # Changed to async
         self,
         input_image: str,
         prompts: str | list[str] = "",
         output: str | None = None,
-    ) -> None:
+    ) -> None: # Return type is None, but it's an async def
         """Generate images using the depth map of the input image.
 
         Args:
@@ -366,7 +338,7 @@ class TwatGenAiCLI:
             prompts: One or more text prompts for generation
             output: Optional subdirectory for output files
         """
-        import asyncio
+        # import asyncio # No longer needed here
 
         input_img = self._prepare_image_input(input_image)
         if not input_img:
@@ -381,18 +353,16 @@ class TwatGenAiCLI:
             model_type=ModelTypes.DEPTH,
         )
 
-        results = asyncio.run(
-            self._run_generation(
-                prompts,
-                ModelTypes.DEPTH,
-                image_config=i2i_config,
-                output_subdirectory=output,
-                input_image_path=input_img.path,
-            )
+        results = await self._run_generation( # await here
+            prompts,
+            ModelTypes.DEPTH,
+            image_config=i2i_config,
+            output_subdirectory=output,
+            input_image_path=input_img.path,
         )
         self._print_results(results)
 
-    def upscale(
+    async def upscale( # Changed to async
         self,
         input_image: str,
         tool: Literal[
@@ -440,7 +410,7 @@ class TwatGenAiCLI:
             ccsr_steps: Number of steps for CCSR
             output: Optional subdirectory for output files
         """
-        import asyncio
+        # import asyncio # No longer needed here
 
         # Get upscaler from tool argument
         upscaler = UPSCALE_TOOL_MAP.get(tool.lower())
@@ -508,18 +478,16 @@ class TwatGenAiCLI:
 
         upscale_config = UpscaleConfig(input_image=input_img, **upscale_kwargs)
 
-        results = asyncio.run(
-            self._run_generation(
-                prompts,
-                upscaler,
-                upscale_config=upscale_config,
-                output_subdirectory=output,
-                input_image_path=input_img.path,
-            )
+        results = await self._run_generation( # await here
+            prompts,
+            upscaler, # This is a ModelTypes enum already
+            upscale_config=upscale_config,
+            output_subdirectory=output,
+            input_image_path=input_img.path,
         )
         self._print_results(results)
 
-    def outpaint(
+    async def outpaint( # Changed to async
         self,
         input_image: str,
         prompts: str | list[str],
@@ -548,7 +516,7 @@ class TwatGenAiCLI:
             border: Border width percentage for Bria
             output: Optional subdirectory for output files
         """
-        import asyncio
+        # import asyncio # No longer needed here
 
         # Parse and validate input image
         input_img = self._prepare_image_input(input_image)

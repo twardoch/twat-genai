@@ -142,3 +142,16 @@ class OutpaintConfig(BaseModel):
 
 # --- Lora Handling (Moved to core/lora.py) ---
 # TODO: Confirm all LoRA logic/models are removed from here and __main__.py
+
+# --- Constants from former engines/fal/upscale.py ---
+# Maximum input image dimensions for each tool
+UPSCALE_TOOL_MAX_INPUT_SIZES: dict[ModelTypes, int] = {
+    ModelTypes.UPSCALER_DRCT: 2048,
+    ModelTypes.UPSCALER_IDEOGRAM: 1024,
+    ModelTypes.UPSCALER_RECRAFT_CREATIVE: 2048,
+    ModelTypes.UPSCALER_RECRAFT_CLARITY: 2048,
+    ModelTypes.UPSCALER_CCSR: 2048,
+    ModelTypes.UPSCALER_ESRGAN: 2048,
+    ModelTypes.UPSCALER_AURA_SR: 1024,
+    ModelTypes.UPSCALER_CLARITY: 1024,
+}

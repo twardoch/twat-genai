@@ -9,7 +9,7 @@ from twat_genai.engines.base import EngineConfig, ImageGenerationEngine
 from twat_genai.engines.fal import FALEngine
 from twat_genai.engines.fal.config import (
     ImageToImageConfig,
-    ModelTypes,
+    ModelTypes,  # This now also includes upscale/outpaint model types
     OutpaintConfig,
     UpscaleConfig,
 )
@@ -27,10 +27,10 @@ __all__ = [
     "ImageGenerationEngine",
     "ImageInput",
     "ImageResult",
-    "ImageSizeWH",
-    "ImageSizes",
+    "ImageSizeWH",  # Defined in core.config
+    "ImageSizes",   # Defined in core.image
     "ImageToImageConfig",
-    "ModelTypes",
+    "ModelTypes",   # Defined in engines.fal.config
     "OutpaintConfig",
     "TwatGenAiCLI",
     "UpscaleConfig",

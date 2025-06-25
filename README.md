@@ -42,9 +42,8 @@ The package follows a layered architecture:
     *   `config.py`: Defines core data structures like `ImageInput` (representing input images via URL, path, or PIL object), `ImageResult` (standardized output containing metadata, paths, and results), `ImageSizeWH`, type aliases (`Prompts`, `OutputDir`, etc.), and `ImageInput` validation logic.
     *   `lora.py`: Defines Pydantic models for representing LoRA configurations (`LoraRecord`, `LoraRecordList`, `LoraLib`, `LoraSpecEntry`, `CombinedLoraSpecEntry`). Handles loading LoRA definitions from JSON.
     *   `image.py`: Defines image format (`ImageFormats`) and size (`ImageSizes`) enums, and provides a utility function `save_image` for saving PIL images to disk. Also includes `validate_image_size` for parsing size strings.
-    *   `image_utils.py`: Provides utilities for handling images, such as asynchronous downloading from URLs (`download_image_to_temp`, `download_image` using `httpx`) and resizing based on model constraints (`resize_image_if_needed`, utilizing size limits defined in `engines/fal/upscale.py`).
+    *   `image_utils.py`: Provides utilities for handling images, such as asynchronous downloading from URLs (`download_image_to_temp`, `download_image` using `httpx`) and resizing based on model constraints (`resize_image_if_needed`, utilizing size limits defined in `engines/fal/config.py`).
     *   `prompt.py`: Includes logic for parsing and expanding Midjourney-style prompt syntax, handling image prompts (URLs), multi-prompts (`::`), weighted parts, permutation prompts (`{alt1, alt2}`), and parameters (`--param value`). Provides `normalize_prompts` for processing input prompts.
-    *   `models.py`: *Note: This module appears to contain duplicates of models defined elsewhere (e.g., `ImageSizes`, `ImageResult`). This might be a remnant of refactoring and the definitions in `core/config.py` and `core/image.py` are likely the canonical ones.*
     *   `__init__.py`: Makes the `core` directory a Python package.
 
 2.  **Engines (`src/twat_genai/engines`)**: Implements the logic for interacting with specific AI platforms or model families.
@@ -55,11 +54,11 @@ The package follows a layered architecture:
             *   Handling input image preparation (downloading URLs via `core.image_utils`, resizing for upscalers via `core.image_utils`, uploading local/temp files via `client.upload_image`) in `_prepare_image_input`. Handles temp file cleanup.
             *   Receiving generation requests via the `generate` method.
             *   Determining the operation type (TTI, I2I, Upscale, Outpaint, Canny, Depth) based on the `model` parameter (`ModelTypes` enum).
-            *   Calling the appropriate `process_*` method on the `FalApiClient` (e.g., `process_upscale`, `process_outpaint`, `process_tti`, `process_i2i`).
+            *   FalApiClient (e.g., `process_upscale`, `process_outpaint`, `process_tti`, `process_i2i`).
             *   Handling `shutdown`.
         *   `client.py`: Contains the `FalApiClient` class responsible for direct interaction with the FAL API using the `fal_client` library.
             *   Provides `upload_image` using `fal_client.upload_file_async`.
-            *   Includes methods for specific operations: `process_tti`, `process_i2i`, `process_canny`, `process_depth`, `process_upscale`, `process_outpaint`.
+            *   Includes methods for specific operations: `process_tti`, `process_i2i`, `process_canny`, `process_depth`, `process_upscale`, `process_outpaint`, `process_genfill`.
             *   These methods delegate job submission to the top-level helper `_submit_fal_job` (which uses `fal_client.submit_async`).
             *   Result retrieval and processing happen in `_get_fal_result`, which polls using `fal_client.status_async` and fetches with `fal_client.result_async`.
             *   Parses results using a dispatch mechanism (`_get_result_extractor`) that selects an appropriate parsing function (currently `_extract_generic_image_info`) to standardize output from different FAL endpoints into `image_info` dicts.
@@ -68,29 +67,22 @@ The package follows a layered architecture:
         *   `config.py`: Defines FAL-specific Pydantic configuration models used as *schemas* for arguments:
             *   `ModelTypes` enum mapping model names to FAL API endpoint strings.
             *   `ImageToImageConfig`, `UpscaleConfig` (with many tool-specific fields), and `OutpaintConfig`. These models expect an image input conforming to the `FALImageInput` structure.
-            *   *Note: This file also incorrectly contains a duplicate definition of `FalApiClient` and related helpers, which should be ignored.*
         *   `lora.py`: Contains FAL-specific LoRA handling logic:
             *   Loading the LoRA library from JSON (`get_lora_lib`, using `__main___loras.json` or `TWAT_GENAI_LORA_LIB` path).
             *   Parsing LoRA specification strings (library keys, `url:scale` syntax) via `parse_lora_phrase`.
             *   Normalizing various input spec formats (`str`, `list`, `dict`) into a list of `LoraSpecEntry` or `CombinedLoraSpecEntry` objects using `normalize_lora_spec`.
             *   Building the final LoRA argument list (list of dicts with `path` and `scale`) and augmenting the text prompt for the FAL API call using `build_lora_arguments`.
-        *   `upscale.py`: Contains data and helper logic specific to upscaling:
-            *   `UPSCALE_TOOL_DEFAULT_PARAMS`: Dictionary mapping upscale `ModelTypes` to their default API parameters.
-            *   `UPSCALE_TOOL_MAX_INPUT_SIZES`: Dictionary mapping upscale `ModelTypes` to their maximum allowed input dimensions (used by `core.image_utils.resize_image_if_needed`).
-            *   `run_upscale` (currently unused): Helper function intended to assemble API arguments from `UpscaleConfig` and defaults before calling the client.
-        *   `outpaint.py`: Contains helper logic specific to outpainting:
-            *   `run_outpaint` (currently unused): Helper function that calculates image placement (`original_image_location`, `original_image_size`), gets the image URL, assembles API arguments from `OutpaintConfig`, and calls `client.process_outpaint`.
         *   `models.py`: Defines the concrete `FALImageInput` class, inheriting from `core.config.ImageInput`. Its `to_url` async method implements the logic to convert Path or PIL image inputs into uploadable URLs using `fal_client.upload_file_async`.
 
 3.  **CLI (`src/twat_genai/cli.py`)**: Provides the command-line interface using the `python-fire` library.
-    *   Defines the main `cli` function that parses arguments for all supported modes and parameters.
+    *   Defines the main `TwatGenAiCLI` class whose methods are exposed as CLI subcommands.
     *   Maps CLI arguments to the appropriate `ModelTypes`, constructs the base `EngineConfig`, and creates specific configuration objects (`ImageToImageConfig`, `UpscaleConfig`, `OutpaintConfig`) as needed.
     *   Handles parsing of `input_image` (path vs URL) into `core.config.ImageInput`.
-    *   Delegates execution to the `async_main` helper function, which instantiates and runs the `FALEngine`.
-    *   Handles output directory resolution using `twat.paths.PathManager` (if available) or defaults to `./generated_images`.
+    *   Each command method (e.g., `text`, `image`, `upscale`) calls a shared `_run_generation` async helper, which in turn instantiates and runs the `FALEngine`. `asyncio.run()` is used within each command method.
+    *   Handles output directory resolution, defaulting to `./generated_images` or a subfolder of the input image's directory.
     *   Includes helper functions for parsing arguments like `image_size`.
 
-4.  **Entry Point (`src/twat_genai/__main__.py`)**: A minimal script that allows the package to be run as a module (`python -m twat_genai`). It simply imports and calls `fire.Fire(cli)` from `cli.py`.
+4.  **Entry Point (`src/twat_genai/__main__.py`)**: A minimal script that allows the package to be run as a module (`python -m twat_genai`). It simply imports `TwatGenAiCLI` and uses `fire.Fire(TwatGenAiCLI)`.
 
 5.  **Tests (`tests/`)**: Contains unit tests using `pytest` and `unittest.mock`.
     *   `test_fal_client.py`: Tests the `FalApiClient` methods (like `process_tti`, `_extract_generic_image_info`) and internal helpers, using mocked dependencies (`fal_client` calls, LoRA building, file system access).
@@ -109,7 +101,7 @@ The package follows a layered architecture:
 4.  **Image Preparation (`FALEngine._prepare_image_input`)**: Before calling the FAL API for modes requiring an input image (I2I, Canny, Depth, Upscale, Outpaint), this method ensures a usable image URL is available:
     *   If the input is a URL, it's downloaded to a temporary file using `core.image_utils.download_image_to_temp`.
     *   If the input is a PIL Image, it's saved to a temporary file.
-    *   If the operation is an upscale, it checks the dimensions against `engines.fal.upscale.UPSCALE_TOOL_MAX_INPUT_SIZES`. If the image exceeds the limits for the specific `model_type`, it's resized using `core.image_utils.resize_image_if_needed`, saving the result to another temporary file.
+    *   If the operation is an upscale, it checks the dimensions against size limits (defined in `engines/fal/config.py`). If the image exceeds the limits for the specific `model_type`, it's resized using `core.image_utils.resize_image_if_needed`, saving the result to another temporary file.
     *   The final image file (original path, downloaded temp, or resized temp) is uploaded using `client.upload_image` to get a FAL-usable URL.
     *   Temporary files created during this process are cleaned up afterwards.
 5.  **API Interaction (`FalApiClient`)**:
@@ -127,7 +119,7 @@ The package follows a layered architecture:
         *   Original prompt and the full `job_params` dictionary used for the request (for reproducibility/logging).
     *   Saves the `ImageResult` object (excluding the PIL image itself) as a JSON metadata file alongside the downloaded image in the `output_dir`.
     *   Returns the `ImageResult` object (without the PIL image loaded by default).
-7.  **CLI Operation (`cli.py`)**: The command-line interface translates flags and arguments into the necessary configuration objects (`EngineConfig`, `ImageInput`, `ImageToImageConfig`, `UpscaleConfig`, `OutpaintConfig`). It then calls the core asynchronous logic (`async_main`), which instantiates the `FALEngine` and invokes its `generate` method, finally printing basic information about the generated result(s). Error handling for invalid arguments or configuration issues is included.
+7.  **CLI Operation (`cli.py`)**: The `TwatGenAiCLI` class methods translate flags and arguments into the necessary configuration objects (`EngineConfig`, `ImageInput`, `ImageToImageConfig`, `UpscaleConfig`, `OutpaintConfig`). Each method then calls `_run_generation`, which instantiates the `FALEngine` and invokes its `generate` method. `asyncio.run()` is used within each CLI method to manage the async execution. Basic information about the generated result(s) is printed. Error handling for invalid arguments or configuration issues is included.
 
 ## Usage
 
@@ -319,13 +311,6 @@ if __name__ == "__main__":
     *   Run checks locally: `uv run lint` and `uv run test`.
     *   Pre-commit hooks are configured in `.pre-commit-config.yaml` to enforce quality standards before committing. Install hooks with `pre-commit install`.
 *   **Dependencies**: Managed using `uv` and specified in `pyproject.toml`. Install with `uv pip install -e ".[all]"`.
-*   **Cleanup Script**: `cleanup.py` provides commands for maintaining the repository:
-    *   `python cleanup.py status`: Checks file structure, git status, installs dependencies, and runs quality checks. Use this first.
-    *   `python cleanup.py update`: Runs `status`, then stages and commits changes. Use for routine commits.
-    *   `python cleanup.py push`: Pushes committed changes.
-    *   `python cleanup.py venv`: Sets up the virtual environment.
-    *   `python cleanup.py install`: Installs dependencies.
-    It logs operations to `CLEANUP.txt`.
 *   **Versioning**: Handled by `hatch-vcs`, deriving the version from `git` tags.
 *   **Documentation**:
     *   `README.md`: This file.
