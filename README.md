@@ -1,324 +1,439 @@
-# twat-genai
+# `twat-genai`: Generative AI Toolkit
 
-## Overview
+**`twat-genai`** is a powerful Python package that provides a unified command-line interface (CLI) and Python API for a variety of generative AI image tasks. It simplifies interaction with different AI models and services, currently focusing on the [FAL (fal.ai)](https://fal.ai/) platform. This tool is part of the [TWAT (Twardoch Utility Tools)](https://pypi.org/project/twat/) collection.
 
-`twat-genai` is a Python package designed to provide a unified interface for various generative AI image tasks, currently focusing on models available through the FAL (fal.ai) platform. It allows users to perform Text-to-Image, Image-to-Image, ControlNet-like operations (Canny, Depth), Image Upscaling, and Image Outpainting via both a command-line interface (CLI) and a Python API.
+Whether you're a developer, artist, or researcher, `twat-genai` empowers you to programmatically generate and manipulate images, automate creative workflows, and experiment with cutting-edge AI models.
 
-The package aims for modularity and extensibility, separating concerns into core components, engine implementations, and the user interface.
+## Key Features
+
+*   **Unified Interface:** Access Text-to-Image, Image-to-Image, ControlNet-like operations (Canny edges, Depth maps), Image Upscaling, and Image Outpainting through a consistent CLI and API.
+*   **FAL.ai Integration:** Leverages the [fal.ai](https://fal.ai/) platform for model hosting and execution.
+*   **Flexible Input:** Use text prompts with Midjourney-style syntax (permutations, multi-prompts), and provide input images via URLs, local file paths, or PIL Image objects.
+*   **LoRA Support:** Easily apply LoRA (Low-Rank Adaptation) models from a predefined library or by specifying URLs.
+*   **Comprehensive Configuration:** Fine-tune generation parameters using Pydantic-based configuration objects.
+*   **Standardized Output:** Receive results in a consistent `ImageResult` format, including metadata and paths to generated files.
+*   **Extensible Design:** Built with modularity in mind, allowing for future expansion to other AI engines and models.
+
+## Who Is It For?
+
+*   **Developers:** Integrate generative AI capabilities into your Python applications.
+*   **Artists & Designers:** Experiment with AI-powered image creation and manipulation, and automate parts of your creative workflow.
+*   **Researchers:** Conduct experiments and batch process image generation tasks.
+*   **CLI Users:** Quickly generate images or perform image operations directly from your terminal.
+
+## Why Use `twat-genai`?
+
+*   **Simplicity:** Abstracts away the complexities of individual AI model APIs.
+*   **Consistency:** Provides a standardized way to interact with different types of generative models.
+*   **Automation:** Enables scripting and automation of image generation tasks.
+*   **Reproducibility:** Saves metadata with generation parameters for better tracking.
+*   **Power & Flexibility:** Offers fine-grained control over the generation process.
 
 ## Installation
 
-1.  **Prerequisites**:
-    *   Python 3.10 or higher.
-    *   `uv` (recommended for faster installation): `pip install uv` or `curl -LsSf https://astral.sh/uv/install.sh | sh`.
-    *   `git` (for versioning).
-2.  **Clone the repository**:
+### Prerequisites
+
+*   Python 3.10 or higher.
+*   `uv` (recommended for faster installation and environment management):
+    *   Install `uv`: `pip install uv` or `curl -LsSf https://astral.sh/uv/install.sh | sh`.
+*   `git` (for cloning the repository).
+
+### Steps
+
+1.  **Clone the Repository:**
     ```bash
     git clone https://github.com/twardoch/twat-genai.git
     cd twat-genai
     ```
-3.  **Set up environment and install**:
+
+2.  **Set Up Virtual Environment and Install:**
     ```bash
-    # Create virtual environment (optional but recommended)
+    # Create a virtual environment (recommended)
     uv venv
     source .venv/bin/activate  # On Linux/macOS
-    # .venv\Scripts\activate  # On Windows
+    # .venv\Scripts\activate    # On Windows
 
     # Install the package in editable mode with all dependencies
     uv pip install -e ".[all]"
     ```
-4.  **Set FAL API Key**:
-    Obtain an API key from [fal.ai](https://fal.ai/) and set it as an environment variable:
-    ```bash
-    export FAL_KEY="your-fal-api-key"
-    # Or add FAL_KEY="your-fal-api-key" to a .env file in the project root.
-    ```
 
-## Architecture
+3.  **Set FAL API Key:**
+    You need an API key from [fal.ai](https://fal.ai/).
+    *   Set it as an environment variable:
+        ```bash
+        export FAL_KEY="your-fal-api-key"
+        ```
+    *   Or, create a `.env` file in the project root (`twat-genai/`) with the following content:
+        ```
+        FAL_KEY="your-fal-api-key"
+        ```
 
-The package follows a layered architecture:
+## Basic Usage (CLI)
 
-1.  **Core (`src/twat_genai/core`)**: Contains fundamental building blocks and utilities independent of specific AI engines.
-    *   `config.py`: Defines core data structures like `ImageInput` (representing input images via URL, path, or PIL object), `ImageResult` (standardized output containing metadata, paths, and results), `ImageSizeWH`, type aliases (`Prompts`, `OutputDir`, etc.), and `ImageInput` validation logic.
-    *   `lora.py`: Defines Pydantic models for representing LoRA configurations (`LoraRecord`, `LoraRecordList`, `LoraLib`, `LoraSpecEntry`, `CombinedLoraSpecEntry`). Handles loading LoRA definitions from JSON.
-    *   `image.py`: Defines image format (`ImageFormats`) and size (`ImageSizes`) enums, and provides a utility function `save_image` for saving PIL images to disk. Also includes `validate_image_size` for parsing size strings.
-    *   `image_utils.py`: Provides utilities for handling images, such as asynchronous downloading from URLs (`download_image_to_temp`, `download_image` using `httpx`) and resizing based on model constraints (`resize_image_if_needed`, utilizing size limits defined in `engines/fal/config.py`).
-    *   `prompt.py`: Includes logic for parsing and expanding Midjourney-style prompt syntax, handling image prompts (URLs), multi-prompts (`::`), weighted parts, permutation prompts (`{alt1, alt2}`), and parameters (`--param value`). Provides `normalize_prompts` for processing input prompts.
-    *   `__init__.py`: Makes the `core` directory a Python package.
+The main command is `twat-genai`. You can explore commands and options with `twat-genai --help`.
 
-2.  **Engines (`src/twat_genai/engines`)**: Implements the logic for interacting with specific AI platforms or model families.
-    *   `base.py`: Defines the abstract base class `ImageGenerationEngine` which specifies the common interface (`initialize`, `generate`, `shutdown`, async context manager support) and the base `EngineConfig` Pydantic model (containing `guidance_scale`, `num_inference_steps`, `image_size`, `enable_safety_checker`).
-    *   **FAL Engine (`src/twat_genai/engines/fal`)**: Implementation for the FAL platform.
-        *   `__init__.py`: Contains the `FALEngine` class, which inherits from `ImageGenerationEngine`. It orchestrates the process by:
-            *   Initializing the `FalApiClient` on `initialize()` or first `generate()` call, checking for the `FAL_KEY` env var.
-            *   Handling input image preparation (downloading URLs via `core.image_utils`, resizing for upscalers via `core.image_utils`, uploading local/temp files via `client.upload_image`) in `_prepare_image_input`. Handles temp file cleanup.
-            *   Receiving generation requests via the `generate` method.
-            *   Determining the operation type (TTI, I2I, Upscale, Outpaint, Canny, Depth) based on the `model` parameter (`ModelTypes` enum).
-            *   FalApiClient (e.g., `process_upscale`, `process_outpaint`, `process_tti`, `process_i2i`).
-            *   Handling `shutdown`.
-        *   `client.py`: Contains the `FalApiClient` class responsible for direct interaction with the FAL API using the `fal_client` library.
-            *   Provides `upload_image` using `fal_client.upload_file_async`.
-            *   Includes methods for specific operations: `process_tti`, `process_i2i`, `process_canny`, `process_depth`, `process_upscale`, `process_outpaint`, `process_genfill`.
-            *   These methods delegate job submission to the top-level helper `_submit_fal_job` (which uses `fal_client.submit_async`).
-            *   Result retrieval and processing happen in `_get_fal_result`, which polls using `fal_client.status_async` and fetches with `fal_client.result_async`.
-            *   Parses results using a dispatch mechanism (`_get_result_extractor`) that selects an appropriate parsing function (currently `_extract_generic_image_info`) to standardize output from different FAL endpoints into `image_info` dicts.
-            *   Handles downloading the final image using the top-level helper `_download_image_helper` (uses `httpx`).
-            *   Constructs and returns the final `ImageResult` object, saving metadata to a JSON file if `output_dir` is provided.
-        *   `config.py`: Defines FAL-specific Pydantic configuration models used as *schemas* for arguments:
-            *   `ModelTypes` enum mapping model names to FAL API endpoint strings.
-            *   `ImageToImageConfig`, `UpscaleConfig` (with many tool-specific fields), and `OutpaintConfig`. These models expect an image input conforming to the `FALImageInput` structure.
-        *   `lora.py`: Contains FAL-specific LoRA handling logic:
-            *   Loading the LoRA library from JSON (`get_lora_lib`, using `__main___loras.json` or `TWAT_GENAI_LORA_LIB` path).
-            *   Parsing LoRA specification strings (library keys, `url:scale` syntax) via `parse_lora_phrase`.
-            *   Normalizing various input spec formats (`str`, `list`, `dict`) into a list of `LoraSpecEntry` or `CombinedLoraSpecEntry` objects using `normalize_lora_spec`.
-            *   Building the final LoRA argument list (list of dicts with `path` and `scale`) and augmenting the text prompt for the FAL API call using `build_lora_arguments`.
-        *   `models.py`: Defines the concrete `FALImageInput` class, inheriting from `core.config.ImageInput`. Its `to_url` async method implements the logic to convert Path or PIL image inputs into uploadable URLs using `fal_client.upload_file_async`.
+### Common Arguments
 
-3.  **CLI (`src/twat_genai/cli.py`)**: Provides the command-line interface using the `python-fire` library.
-    *   Defines the main `TwatGenAiCLI` class whose methods are exposed as CLI subcommands.
-    *   Maps CLI arguments to the appropriate `ModelTypes`, constructs the base `EngineConfig`, and creates specific configuration objects (`ImageToImageConfig`, `UpscaleConfig`, `OutpaintConfig`) as needed.
-    *   Handles parsing of `input_image` (path vs URL) into `core.config.ImageInput`.
-    *   Each command method (e.g., `text`, `image`, `upscale`) calls a shared `_run_generation` async helper, which in turn instantiates and runs the `FALEngine`. `asyncio.run()` is used within each command method.
-    *   Handles output directory resolution, defaulting to `./generated_images` or a subfolder of the input image's directory.
-    *   Includes helper functions for parsing arguments like `image_size`.
+*   `--prompts "your prompt"`: The text prompt for generation.
+    *   Multiple prompts (semicolon separated): `"a cat; a dog"`
+    *   Permutations: `"a {red,blue} car"` (generates "a red car" and "a blue car")
+*   `--output_dir <path>`: Directory to save generated images (default: `generated_images`).
+*   `--model <model_type>`: Specifies the operation (e.g., `text`, `image`, `canny`, `upscale`, `outpaint`).
+*   `--input_image <path_or_url>`: Path or URL to an input image (for `image`, `canny`, `depth`, `upscale`, `outpaint`).
+*   `--image_size <preset_or_WxH>`: Output image size (e.g., `SQ`, `HD`, `1024,768`). Default: `SQ` (1024x1024).
+*   `--lora "<lora_name_or_url:scale>"`: Apply a LoRA.
+    *   From library: `--lora "gstdrw style"`
+    *   URL with scale: `--lora "https://huggingface.co/path/to/lora:0.7"`
+    *   Multiple LoRAs: `--lora "name1:0.5; url2:0.8"`
+*   `--verbose`: Enable detailed logging.
+*   `--filename_prefix <prefix>`: Prepend text to output filenames.
+*   `--negative_prompt "text"`: Specify what to avoid in the image.
 
-4.  **Entry Point (`src/twat_genai/__main__.py`)**: A minimal script that allows the package to be run as a module (`python -m twat_genai`). It simply imports `TwatGenAiCLI` and uses `fire.Fire(TwatGenAiCLI)`.
+### Examples
 
-5.  **Tests (`tests/`)**: Contains unit tests using `pytest` and `unittest.mock`.
-    *   `test_fal_client.py`: Tests the `FalApiClient` methods (like `process_tti`, `_extract_generic_image_info`) and internal helpers, using mocked dependencies (`fal_client` calls, LoRA building, file system access).
-    *   `test_image_utils.py`: Tests image downloading (`download_image_to_temp`, `download_image`) and resizing (`resize_image_if_needed`) utilities.
-    *   `test_twat_genai.py`: Basic package tests (e.g., checking `__version__`).
-    *   `conftest.py`: Provides shared `pytest` fixtures, such as `mock_fal_api_client` for injecting a mocked client instance into tests.
-
-## Functionality
-
-1.  **Initialization**: When the `FALEngine` is instantiated (either via CLI or Python API) and its `initialize()` method is called (or implicitly via context manager `__aenter__` or first `generate()` call), it ensures the `FAL_KEY` environment variable is set and initializes the `FalApiClient`.
-2.  **Input Handling**:
-    *   Accepts prompts as strings or lists of strings. Supports brace expansion for permutations (e.g., `a {red,blue} car`) and semicolon separation for multiple distinct prompts via `core.prompt.normalize_prompts`.
-    *   Accepts image inputs as URLs, local file paths, or PIL Images via the `core.config.ImageInput` model. The `engines.fal.models.FALImageInput` subclass handles the conversion of paths/PIL images to URLs by uploading them using `fal_client.upload_file_async` when its `to_url()` method is invoked (typically within `FALEngine._prepare_image_input`).
-    *   Handles LoRA specifications via strings (keywords defined in `__main___loras.json`, `url:scale` pairs, `;` separated lists) or structured lists/dicts. The `engines.fal.lora.build_lora_arguments` function parses the spec and prepares the arguments for the FAL API.
-3.  **Configuration**: Uses Pydantic models (`EngineConfig`, `ImageToImageConfig`, `UpscaleConfig`, `OutpaintConfig`) for type validation and structuring configuration. These models are populated based on CLI arguments or Python API calls and passed to the `FALEngine.generate` method.
-4.  **Image Preparation (`FALEngine._prepare_image_input`)**: Before calling the FAL API for modes requiring an input image (I2I, Canny, Depth, Upscale, Outpaint), this method ensures a usable image URL is available:
-    *   If the input is a URL, it's downloaded to a temporary file using `core.image_utils.download_image_to_temp`.
-    *   If the input is a PIL Image, it's saved to a temporary file.
-    *   If the operation is an upscale, it checks the dimensions against size limits (defined in `engines/fal/config.py`). If the image exceeds the limits for the specific `model_type`, it's resized using `core.image_utils.resize_image_if_needed`, saving the result to another temporary file.
-    *   The final image file (original path, downloaded temp, or resized temp) is uploaded using `client.upload_image` to get a FAL-usable URL.
-    *   Temporary files created during this process are cleaned up afterwards.
-5.  **API Interaction (`FalApiClient`)**:
-    *   Builds the final API argument dictionary based on the operation type, base config, specific config, and processed LoRA/prompt information.
-    *   Submits the job to the appropriate FAL endpoint (defined in `ModelTypes` enum) using `fal_client.submit_async` via the `_submit_fal_job` helper.
-    *   Polls for job status using `fal_client.status_async` in `_get_fal_result`.
-    *   Fetches the final result dictionary using `fal_client.result_async` in `_get_fal_result`.
-    *   Parses the result structure using `_extract_generic_image_info` (selected via `_get_result_extractor`) to extract key information like image URL(s), dimensions, content type, and seed (if provided by the API).
-6.  **Result Handling (`FalApiClient._get_fal_result`)**:
-    *   Downloads the generated image URL(s) to the specified `output_dir` using `_download_image_helper`.
-    *   Constructs a standardized `ImageResult` object (`core.config.ImageResult`) containing:
-        *   Request ID, timestamp.
-        *   The raw API result dictionary.
-        *   Parsed `image_info` dictionary (containing the final local path, URL, dimensions, content type, seed, metadata path, etc.).
-        *   Original prompt and the full `job_params` dictionary used for the request (for reproducibility/logging).
-    *   Saves the `ImageResult` object (excluding the PIL image itself) as a JSON metadata file alongside the downloaded image in the `output_dir`.
-    *   Returns the `ImageResult` object (without the PIL image loaded by default).
-7.  **CLI Operation (`cli.py`)**: The `TwatGenAiCLI` class methods translate flags and arguments into the necessary configuration objects (`EngineConfig`, `ImageInput`, `ImageToImageConfig`, `UpscaleConfig`, `OutpaintConfig`). Each method then calls `_run_generation`, which instantiates the `FALEngine` and invokes its `generate` method. `asyncio.run()` is used within each CLI method to manage the async execution. Basic information about the generated result(s) is printed. Error handling for invalid arguments or configuration issues is included.
-
-## Usage
-
-### CLI
-
-The main entry point is the `twat-genai` command (or `python -m twat_genai`).
-
+**1. Text-to-Image (TTI):**
 ```bash
-# Basic Text-to-Image (TTI)
-twat-genai --prompts "a futuristic cityscape at sunset" --output_dir generated --filename_prefix city
+# Basic TTI
+twat-genai text --prompts "A futuristic cityscape at sunset, neon lights, cinematic"
 
-# TTI with multiple prompts and brace expansion
-twat-genai --prompts "a photo of a {red,blue} car; a drawing of a {cat,dog}" --image_size HD
+# TTI with specific size and multiple prompts
+twat-genai text --prompts "photo of a majestic lion; illustration of a mythical phoenix" --image_size HD
 
-# Image-to-Image (I2I)
-twat-genai --model image --input_image path/to/input.jpg --prompts "make it look like an oil painting" --strength 0.65
-
-# ControlNet Canny
-twat-genai --model canny --input_image path/to/drawing.png --prompts "a detailed spaceship based on the sketch"
-
-# Upscale using ESRGAN
-twat-genai --model upscale --input_image path/to/lowres.png --upscale_tool esrgan --scale 4 --output_dir upscaled
-
-# Upscale using Ideogram (requires prompt)
-twat-genai --model upscale --input_image path/to/photo.jpg --upscale_tool ideogram --prompts "enhance the details of the landscape photo"
-
-# Outpaint an image
-twat-genai --model outpaint --input_image path/to/center_image.png --prompts "expand the scene with a forest on the left and a river on the right" --target_width 2048 --target_height 1024
-
-# Using LoRA from library (defined in __main___loras.json)
-twat-genai --prompts "a portrait" --lora "gstdrw style"
-
-# Using specific LoRA URL with scale
-twat-genai --prompts "a robot" --lora "https://huggingface.co/path/to/lora:0.8"
-
-# Verbose logging
-twat-genai --prompts "debug prompt" --verbose
+# TTI with a LoRA
+twat-genai text --prompts "portrait of a warrior" --lora "shou_xin:0.8" --output_dir my_portraits
 ```
 
-**Common Arguments:**
+**2. Image-to-Image (I2I):**
+```bash
+twat-genai image --input_image path/to/my_photo.jpg --prompts "transform into a vibrant oil painting" --strength 0.65
+```
 
-*   `--prompts`: One or more prompts (string or list). Use `;` to separate multiple prompts in a single string. Use `{a,b}` for permutations.
-*   `--output_dir`: Directory to save results (defaults to `generated_images`).
-*   `--model`: Operation type (`text`, `image`, `canny`, `depth`, `upscale`, `outpaint`). Default: `text`.
-*   `--input_image`: Path or URL to an input image (required for non-text models).
-*   `--filename_suffix`, `--filename_prefix`: Customize output filenames.
-*   `--image_size`: Output image size preset (`SQ`, `SQL`, `SD`, `HD`, `SDV`, `HDV`) or custom `width,height`. Default: `SQ`.
-*   `--guidance_scale`, `--num_inference_steps`: Control generation process.
-*   `--negative_prompt`: Specify negative prompts.
-*   `--lora`: LoRA specification string (see examples).
-*   `--strength`: Control influence of input image in I2I (0.0 to 1.0). Default: 0.75.
-*   `--upscale_tool`: Name of the upscaler model (e.g., `esrgan`, `ideogram`, `ccsr`). Required for `--model upscale`.
-*   `--scale`: Target upscale factor (e.g., 2, 4). Used by some upscalers.
-*   `--target_width`, `--target_height`: Target dimensions for outpainting. Required for `--model outpaint`.
-*   `--verbose`: Enable debug logging.
+**3. ControlNet-like Operations (Canny Edge):**
+```bash
+twat-genai canny --input_image path/to/sketch.png --prompts "detailed spaceship based on the sketch, metallic texture"
+```
+*(Depth map generation is similar: `twat-genai depth ...`)*
 
-### Python API
+**4. Image Upscaling:**
+```bash
+# Upscale using ESRGAN (general purpose)
+twat-genai upscale --input_image path/to/low_res_image.png --tool esrgan --output_dir upscaled_images
+
+# Upscale using Ideogram (requires prompt, good for creative upscaling)
+twat-genai upscale --input_image path/to/artwork.jpg --tool ideogram --prompts "enhance details, painterly style" --scale 2
+
+# Upscale using Clarity (photo enhancement)
+twat-genai upscale --input_image path/to/photo.jpg --tool clarity --prompts "ultra realistic photo, sharp details"
+```
+*Supported tools for `--tool`: `aura_sr`, `ccsr`, `clarity`, `drct`, `esrgan`, `ideogram`, `recraft_clarity`, `recraft_creative`.*
+
+**5. Image Outpainting:**
+```bash
+# Outpaint using Bria (default)
+twat-genai outpaint --input_image path/to/center_image.png \
+    --prompts "expand the scene with a lush forest on the left and a serene lake on the right" \
+    --target_width 2048 --target_height 1024
+
+# Outpaint using Flux (alternative, may require different prompting)
+twat-genai outpaint --input_image path/to/center_image.png --tool flux \
+    --prompts "fantasy landscape expanding outwards" \
+    --target_width 1920 --target_height 1080
+```
+
+## Basic Usage (Python API)
+
+The Python API offers more flexibility for integration into your projects.
 
 ```python
 import asyncio
 from pathlib import Path
 from twat_genai import (
-    FALEngine, ModelTypes, EngineConfig, ImageInput,
-    ImageToImageConfig, FALImageInput, UpscaleConfig, OutpaintConfig
+    FALEngine,
+    ModelTypes,
+    EngineConfig,
+    ImageInput, # Base ImageInput
+    FALImageInput, # For FAL-specific interactions if needed, usually handled by FALEngine
+    ImageToImageConfig,
+    UpscaleConfig,
+    OutpaintConfig,
 )
 
-async def run_generation():
-    output_dir = Path("api_generated")
-    # Use context manager for initialization and shutdown
+async def main():
+    output_dir = Path("api_generated_images")
+    output_dir.mkdir(exist_ok=True)
+
+    # Ensure FAL_KEY is set in your environment or .env file
+
     async with FALEngine(output_dir=output_dir) as engine:
-
-        # --- Text-to-Image ---
-        print("--- Running Text-to-Image ---")
-        tti_config = EngineConfig(image_size="HD", guidance_scale=4.0)
+        # --- 1. Text-to-Image ---
+        print("Running Text-to-Image...")
+        base_config_tti = EngineConfig(image_size="HD", num_inference_steps=30)
         result_tti = await engine.generate(
-            prompt="A photorealistic image of a bioluminescent forest at night",
-            config=tti_config,
-            model=ModelTypes.TEXT,
-            filename_prefix="bioluminescent_forest"
+            prompt="A stunning fantasy castle on a floating island, hyperrealistic",
+            config=base_config_tti,
+            model=ModelTypes.TEXT, # Specify Text-to-Image model
+            filename_prefix="fantasy_castle",
+            lora_spec="shou_xin:0.5" # Example LoRA
         )
-        print(f"TTI Result Path: {result_tti.image_info.get('path')}")
-        print(f"TTI Metadata Path: {result_tti.image_info.get('metadata_path')}")
+        if result_tti and result_tti.image_info.get("path"):
+            print(f"TTI image saved to: {result_tti.image_info['path']}")
+            print(f"TTI metadata: {result_tti.image_info.get('metadata_path')}")
+        else:
+            print(f"TTI generation failed or image path not found. Result: {result_tti}")
 
-        # --- Image-to-Image ---
-        print("\n--- Running Image-to-Image ---")
-        # Use a placeholder URL for the example
-        input_img_i2i_url = "https://raw.githubusercontent.com/CompVis/stable-diffusion/main/assets/stable-samples/img2img/sketch-mountains-input.jpg"
-        print(f"Using input image URL: {input_img_i2i_url}")
-        # Or use a local path if needed:
-        # input_img_i2i = ImageInput(path=Path("input.jpg"))
-        # if not input_img_i2i.path or not input_img_i2i.path.exists():
-        #      print("Skipping I2I: input.jpg not found.")
-        # else:
-        i2i_base_config = EngineConfig(num_inference_steps=30)
-        # Create FALImageInput directly from URL
-        i2i_model_config = ImageToImageConfig(
-            model_type=ModelTypes.IMAGE, # Technically redundant if passed to generate
-            input_image=FALImageInput(url=input_img_i2i_url),
+
+        # --- 2. Image-to-Image ---
+        print("\nRunning Image-to-Image...")
+        # Replace with your image URL or local path
+        input_image_i2i_url = "https://raw.githubusercontent.com/CompVis/stable-diffusion/main/assets/stable-samples/img2img/sketch-mountains-input.jpg"
+        # For local path: input_img_i2i = ImageInput(path=Path("path/to/your/image.jpg"))
+
+        base_config_i2i = EngineConfig(num_inference_steps=25)
+        # FALImageInput will be created internally by FALEngine from ImageInput
+        i2i_specific_config = ImageToImageConfig(
+            input_image=ImageInput(url=input_image_i2i_url), # Provide base ImageInput
             strength=0.7,
-            negative_prompt="blurry, low quality"
+            negative_prompt="blurry, low quality",
+            model_type=ModelTypes.IMAGE # Redundant if model passed to generate()
         )
         result_i2i = await engine.generate(
-            prompt="Convert this image to a comic book style",
-            config=i2i_base_config,
-            model=ModelTypes.IMAGE,
-            image_config=i2i_model_config, # Pass the specific config
-            lora_spec="shou_xin:0.5", # Example LoRA spec
-            filename_prefix="comic_style"
+            prompt="Convert this to a cyberpunk city scene",
+            config=base_config_i2i,
+            model=ModelTypes.IMAGE, # Specify Image-to-Image model
+            image_config=i2i_specific_config, # Pass the I2I specific config
+            filename_prefix="cyberpunk_city"
         )
-        print(f"I2I Result Path: {result_i2i.image_info.get('path')}")
+        if result_i2i and result_i2i.image_info.get("path"):
+            print(f"I2I image saved to: {result_i2i.image_info['path']}")
+        else:
+            print(f"I2I generation failed or image path not found. Result: {result_i2i}")
 
-        # --- Upscale ---
-        print("\n--- Running Upscale ---")
-        # Use a placeholder URL for the example
-        input_img_upscale_url = "https://raw.githubusercontent.com/CompVis/stable-diffusion/main/assets/stable-samples/img2img/mountains-input.png"
-        print(f"Using input image URL: {input_img_upscale_url}")
-        # Or use a local path:
-        # input_img_upscale = ImageInput(path=Path("low_res.png"))
-        # if not input_img_upscale.path or not input_img_upscale.path.exists():
-        #     print("Skipping Upscale: low_res.png not found.")
-        # else:
-        upscale_base_config = EngineConfig() # Upscalers might ignore some base params
-        upscale_model_config = UpscaleConfig(
-                input_image=FALImageInput(url=input_img_upscale_url),
-                # Prompt might be needed for some upscalers like Ideogram
-                prompt="Enhance details, sharp focus, high resolution",
-                scale=4 # General scale, specific tools might override
+        # --- 3. Upscale ---
+        print("\nRunning Upscale...")
+        # Replace with your image URL or local path
+        input_image_upscale_url = "https://raw.githubusercontent.com/CompVis/stable-diffusion/main/assets/stable-samples/img2img/mountains-input.png" # Example low-res
+
+        # Base config might be ignored or partially used by upscalers
+        base_config_upscale = EngineConfig()
+        upscale_specific_config = UpscaleConfig(
+            input_image=ImageInput(url=input_image_upscale_url),
+            prompt="Enhance details, sharp focus, high resolution", # For Ideogram, Clarity etc.
+            # scale=4 # General scale, some tools have specific scale params like ccsr_scale
+            # Example for esrgan:
+            # esrgan_model="RealESRGAN_x4plus",
+            # Example for clarity:
+            clarity_creativity=0.5
         )
         result_upscale = await engine.generate(
-                prompt="Enhance details, sharp focus, high resolution", # Often passed directly too
-                config=upscale_base_config,
-                model=ModelTypes.UPSCALER_ESRGAN, # Choose the specific upscaler
-                upscale_config=upscale_model_config, # Pass the specific config
-                filename_prefix="upscaled_esrgan"
+            prompt="Enhance details, sharp focus, high resolution", # Prompt for context
+            config=base_config_upscale,
+            # Choose a specific upscaler model from ModelTypes
+            model=ModelTypes.UPSCALER_CLARITY,
+            upscale_config=upscale_specific_config,
+            filename_prefix="upscaled_image_clarity"
         )
-        print(f"Upscale Result Path: {result_upscale.image_info.get('path')}")
+        if result_upscale and result_upscale.image_info.get("path"):
+            print(f"Upscaled image saved to: {result_upscale.image_info['path']}")
+        else:
+            print(f"Upscale failed or image path not found. Result: {result_upscale}")
 
-        # --- Outpaint ---
-        print("\n--- Running Outpaint ---")
-        # Use a placeholder URL for the example
-        input_img_outpaint_url = "https://raw.githubusercontent.com/CompVis/stable-diffusion/main/assets/stable-samples/img2img/mountains-input.png"
-        print(f"Using input image URL: {input_img_outpaint_url}")
-        # Or use a local path:
-        # input_img_outpaint = ImageInput(path=Path("center.png"))
-        # if not input_img_outpaint.path or not input_img_outpaint.path.exists():
-        #      print("Skipping Outpaint: center.png not found.")
-        # else:
-        outpaint_base_config = EngineConfig()
-        outpaint_model_config = OutpaintConfig(
-                input_image=FALImageInput(url=input_img_outpaint_url),
-                prompt="Expand the mountain scene with a clear blue sky and forest below",
-                target_width=1536,
-                target_height=1024
+        # --- 4. Outpaint ---
+        print("\nRunning Outpaint...")
+        # Replace with your image URL or local path
+        input_image_outpaint_url = "https://raw.githubusercontent.com/CompVis/stable-diffusion/main/assets/stable-samples/img2img/mountains-input.png"
+
+        base_config_outpaint = EngineConfig()
+        outpaint_specific_config = OutpaintConfig(
+            input_image=ImageInput(url=input_image_outpaint_url),
+            prompt="Expand the mountain scene with a vast, starry night sky above and misty valleys below.",
+            target_width=1536,
+            target_height=1024,
+            outpaint_tool="bria", # or "flux"
+            # For Bria, you can enable GenFill post-processing via border_thickness_factor > 0
+            border_thickness_factor=0.05 # Example: 5% of min dimension for border
         )
         result_outpaint = await engine.generate(
-                prompt="Expand the mountain scene with a clear blue sky and forest below", # Pass prompt here too
-                config=outpaint_base_config,
-                model=ModelTypes.OUTPAINT_BRIA,
-                outpaint_config=outpaint_model_config,
-                filename_prefix="outpainted_scene"
+            prompt=outpaint_specific_config.prompt, # Pass prompt from config or directly
+            config=base_config_outpaint,
+            model=ModelTypes.OUTPAINT_BRIA, # Or ModelTypes.OUTPAINT_FLUX
+            outpaint_config=outpaint_specific_config,
+            filename_prefix="outpainted_scene_bria"
         )
-        print(f"Outpaint Result Path: {result_outpaint.image_info.get('path')}")
+        if result_outpaint and result_outpaint.image_info.get("path"):
+            print(f"Outpainted image saved to: {result_outpaint.image_info['path']}")
+        else:
+            print(f"Outpaint failed or image path not found. Result: {result_outpaint}")
 
 
 if __name__ == "__main__":
-    # Remove the dummy file creation logic to make the example cleaner
-    # Users should provide their own images or URLs if modifying the example.
-    # print("Note: This example uses placeholder URLs. Provide image paths or URLs for real use.")
-    # try:
-    #     from PIL import Image
-    #     dummy_size = (512, 512)
-    #     if not Path("input.jpg").exists(): Image.new('RGB', dummy_size, color = 'red').save("input.jpg")
-    #     if not Path("low_res.png").exists(): Image.new('RGB', (256, 256), color = 'blue').save("low_res.png")
-    #     if not Path("center.png").exists(): Image.new('RGB', (512, 512), color = 'green').save("center.png")
-    # except ImportError:
-    #     print("Pillow not installed, cannot create dummy images if paths are used.")
-
-    # Check for FAL_KEY
     import os
     if not os.getenv("FAL_KEY"):
         print("Error: FAL_KEY environment variable not set.")
-        print("Please set your FAL API key: export FAL_KEY='your-key'")
+        print("Please set your FAL API key, e.g., export FAL_KEY='your-key'")
     else:
-        asyncio.run(run_generation())
+        asyncio.run(main())
 
-## Maintenance & Development
+```
 
-*   **Code Quality**: The project uses `ruff` for linting and formatting, `mypy` for static type checking, and `pytest` for unit testing.
-    *   Run checks locally: `uv run lint` and `uv run test`.
-    *   Pre-commit hooks are configured in `.pre-commit-config.yaml` to enforce quality standards before committing. Install hooks with `pre-commit install`.
-*   **Dependencies**: Managed using `uv` and specified in `pyproject.toml`. Install with `uv pip install -e ".[all]"`.
-*   **Versioning**: Handled by `hatch-vcs`, deriving the version from `git` tags.
-*   **Documentation**:
-    *   `README.md`: This file.
-    *   `LOG.md`: Changelog.
-    *   `TODO.md`: Task tracking.
-    *   Docstrings in code.
-*   **CI/CD**: GitHub Actions workflows in `.github/workflows` handle:
-    *   `push.yml`: Runs quality checks, tests, and builds distributions on pushes/PRs to `main`.
-    *   `release.yml`: Builds and publishes the package to PyPI and creates a GitHub Release when a tag matching `v*` is pushed.
+---
 
+## Technical Details
 
+This section provides a deeper dive into the architecture, workflow, and contribution guidelines for `twat-genai`.
+
+### Architecture Overview
+
+`twat-genai` is designed with a layered architecture to promote modularity and extensibility:
+
+1.  **Core (`src/twat_genai/core`)**:
+    *   **Purpose:** Provides fundamental building blocks, data structures, and utilities that are independent of any specific AI generation engine.
+    *   **Key Modules:**
+        *   `config.py`: Defines core Pydantic models like `ImageInput` (for representing input images via URL, path, or PIL object), `ImageResult` (standardized output structure), `ImageSizeWH`, and various type aliases.
+        *   `image.py`: Contains `ImageSizes` (enum for presets like SQ, HD), `ImageFormats` (enum for JPG, PNG), and image saving utilities.
+        *   `image_utils.py`: Offers asynchronous utilities for image downloading (`download_image_to_temp`, `download_image`), resizing based on model constraints (`resize_image_if_needed`), and mask creation for outpainting/inpainting (`create_outpaint_mask`, `create_flux_inpainting_assets`, `create_genfill_border_mask`).
+        *   `lora.py`: Defines Pydantic models for LoRA configurations (`LoraRecord`, `LoraLib`, `LoraSpecEntry`).
+        *   `prompt.py`: Implements parsing and normalization for Midjourney-style prompts, including permutation expansion (`{alt1,alt2}`), multi-prompts (`::`), and parameter handling.
+
+2.  **Engines (`src/twat_genai/engines`)**:
+    *   **Purpose:** Implements the logic for interacting with specific AI platforms or model families.
+    *   **`base.py`**:
+        *   Defines the `ImageGenerationEngine` abstract base class (ABC), which specifies the common interface (`initialize`, `generate`, `shutdown`) for all engines.
+        *   Defines the base `EngineConfig` Pydantic model (common parameters like `guidance_scale`, `num_inference_steps`, `image_size`).
+    *   **FAL Engine (`src/twat_genai/engines/fal`)**:
+        *   **Purpose:** Concrete implementation for the [fal.ai](https://fal.ai/) platform.
+        *   `__init__.py` (`FALEngine`):
+            *   The main orchestrator for FAL operations. Inherits from `ImageGenerationEngine`.
+            *   Initializes `FalApiClient` and checks for `FAL_KEY`.
+            *   Handles input image preparation: downloads URLs (via `core.image_utils`), resizes images for upscalers if needed (via `core.image_utils`), and uses `FALImageInput.to_url()` (which calls `FalApiClient.upload_image()`) to get a FAL-usable URL for local/PIL images. Manages temporary file cleanup.
+            *   The `generate()` method determines the operation type (TTI, I2I, Upscale, Outpaint, etc.) based on the `model` (a `ModelTypes` enum value) and routes to the appropriate `FalApiClient` method.
+            *   Manages GenFill post-processing for Bria outpainting and asset creation for Flux outpainting.
+        *   `client.py` (`FalApiClient`):
+            *   Responsible for all direct interactions with the FAL API using the `fal-client` library.
+            *   Provides `upload_image()` using `fal_client.upload_file_async()`.
+            *   Contains specific methods for each operation: `process_tti()`, `process_i2i()`, `process_canny()`, `process_depth()`, `process_upscale()`, `process_outpaint()`, `process_genfill()`.
+            *   These methods submit jobs via `_submit_fal_job()` (which uses `fal_client.submit_async()`).
+            *   Result retrieval and processing occur in `_get_fal_result()`, which polls using `fal_client.status_async()` and fetches with `fal_client.result_async()`.
+            *   Parses results using `_extract_generic_image_info()` to standardize output into an `ImageResult` object.
+            *   Downloads the final image using `_download_image_helper()` (which uses `httpx`).
+        *   `config.py`: Defines FAL-specific Pydantic models used as schemas for API arguments.
+            *   `ModelTypes` (enum): Maps user-friendly model names/operations to specific FAL API endpoint strings.
+            *   `ImageToImageConfig`, `UpscaleConfig`, `OutpaintConfig`: Pydantic models for operation-specific parameters, often including an `ImageInput`.
+            *   `UPSCALE_TOOL_MAX_INPUT_SIZES`: A dictionary defining maximum input dimensions for various upscaler models.
+        *   `lora.py`: Contains FAL-specific LoRA handling.
+            *   `get_lora_lib()`: Loads LoRA definitions from JSON (from `TWAT_GENAI_LORA_LIB` env var, `twat-os` managed path, or the bundled `__main___loras.json`).
+            *   `parse_lora_phrase()`: Parses individual LoRA strings (library keys or `url:scale` syntax).
+            *   `normalize_lora_spec()`: Converts various input LoRA spec formats into a list of `LoraSpecEntry` or `CombinedLoraSpecEntry`.
+            *   `build_lora_arguments()`: Asynchronously prepares the final LoRA argument list (e.g., `[{ "path": "url", "scale": 0.7 }]`) and augments the text prompt for the FAL API.
+        *   `models.py` (`FALImageInput`):
+            *   Subclasses `core.config.ImageInput`.
+            *   Its `to_url()` async method converts local file paths or PIL Image objects into FAL-usable URLs by uploading them via `fal_client.upload_file_async()`.
+
+3.  **CLI (`src/twat_genai/cli.py`)**:
+    *   **Purpose:** Provides the command-line interface.
+    *   Uses the `python-fire` library to expose methods of the `TwatGenAiCLI` class as subcommands.
+    *   Parses CLI arguments, maps them to `ModelTypes`, and constructs the necessary configuration objects (`EngineConfig`, `ImageToImageConfig`, etc.).
+    *   Handles `input_image` parsing into `core.config.ImageInput`.
+    *   Each command method (e.g., `text`, `image`, `upscale`) calls a shared `_run_generation()` async helper, which instantiates and runs the `FALEngine`. `asyncio.run()` is used within the top-level CLI methods that need to call async code.
+
+4.  **Entry Point (`src/twat_genai/__main__.py`)**:
+    *   A minimal script that enables the package to be run as a module (`python -m twat_genai`). It imports `TwatGenAiCLI` and uses `fire.Fire(TwatGenAiCLI)`.
+
+5.  **Default LoRA Library (`src/twat_genai/__main___loras.json`)**:
+    *   A JSON file containing predefined LoRA shortcuts (keywords mapping to LoRA URLs and default scales).
+
+### Detailed Workflow Example (e.g., Image-to-Image)
+
+Here's a simplified flow of an Image-to-Image request:
+
+1.  **User Invocation:**
+    *   **CLI:** `twat-genai image --input_image my_image.jpg --prompts "make it vintage" --strength 0.6`
+    *   **API:** `await engine.generate(prompt="make it vintage", model=ModelTypes.IMAGE, image_config=i2i_cfg_obj, ...)`
+2.  **Argument Parsing (CLI):** `TwatGenAiCLI` parses arguments. `input_image` becomes an `ImageInput` object. `strength`, `prompts`, etc., are collected.
+3.  **Configuration Setup:**
+    *   An `EngineConfig` is created with general settings (e.g., `image_size` if specified).
+    *   An `ImageToImageConfig` is created, holding the `ImageInput` object and I2I-specific parameters like `strength` and `negative_prompt`.
+4.  **Engine Execution:**
+    *   `FALEngine` instance is created (if not already, e.g., via `async with`). `initialize()` is called, setting up the `FalApiClient`.
+    *   `FALEngine.generate()` is called with the prompt, base `EngineConfig`, `model=ModelTypes.IMAGE`, and the `ImageToImageConfig`.
+5.  **Input Preparation (`FALEngine._prepare_image_input`):**
+    *   The `ImageInput` from `ImageToImageConfig` is processed.
+    *   If it's a local path (e.g., `my_image.jpg`) or a PIL Image, `FALImageInput.to_url()` is effectively called.
+    *   `FALImageInput.to_url()` uses `fal_client.upload_file_async()` to upload the image to FAL's temporary storage, returning a URL.
+    *   If the input is already a URL, it might be used directly or downloaded/re-uploaded if processing (like resizing for upscalers, though not typical for I2I) is needed. Original image dimensions are determined.
+6.  **Prompt & LoRA Processing:**
+    *   The input prompt is normalized (e.g., expanding permutations) by `core.prompt.normalize_prompts()`.
+    *   If a `lora_spec` is provided, `engines.fal.lora.build_lora_arguments()` parses it, resolves library keys, and prepares a list of LoRA dictionaries for the API, potentially modifying the prompt string to include LoRA trigger words.
+7.  **API Client Interaction (`FalApiClient.process_i2i`):**
+    *   The `FalApiClient.process_i2i()` method is invoked with the prompt, the FAL-usable image URL, LoRA arguments, and other parameters.
+    *   It assembles the final dictionary of arguments for the FAL API endpoint (`fal-ai/flux-lora/image-to-image`).
+    *   `_submit_fal_job()` is called, which uses `fal_client.submit_async()` to send the request to FAL. A request ID is returned.
+8.  **Result Handling (`FalApiClient._get_fal_result`):**
+    *   The client polls FAL for the job status using `fal_client.status_async(request_id)` until completion.
+    *   The final result JSON is fetched using `fal_client.result_async(request_id)`.
+    *   `_extract_generic_image_info()` parses this JSON to find the URL(s) of the generated image(s) and other metadata like seed, dimensions.
+    *   If `output_dir` is specified, `_download_image_helper()` downloads the generated image(s) using `httpx` and saves them.
+    *   An `ImageResult` Pydantic model is populated with the request ID, timestamp, raw API result, parsed image information (including local path if saved), original prompt, and job parameters. Metadata is saved to a JSON file alongside the image.
+9.  **Return Value:** The `ImageResult` object is returned to the caller (`FALEngine.generate()`, then to the CLI method or API user).
+10. **CLI Output:** The CLI prints a summary of the result, including the path to the saved image.
+
+### Key Data Structures (Pydantic Models)
+
+*   **`core.config.ImageInput`**: Represents an input image (URL, local path, or PIL Image).
+    *   `engines.fal.models.FALImageInput`: Subclass that handles uploading local/PIL images to FAL.
+*   **`core.config.ImageResult`**: Standardized structure for returning generation results, including metadata, image path, and raw API response.
+*   **`engines.base.EngineConfig`**: Base configuration for all engines (e.g., `guidance_scale`, `num_inference_steps`, `image_size`).
+*   **`engines.fal.config.ModelTypes`**: Enum mapping operation types to FAL API endpoint strings (e.g., `TEXT` -> `"fal-ai/flux-lora"`).
+*   **`engines.fal.config.ImageToImageConfig`**: Parameters for I2I, Canny, Depth (e.g., `input_image`, `strength`).
+*   **`engines.fal.config.UpscaleConfig`**: Parameters for various upscaling tools (e.g., `input_image`, `scale`, tool-specific options like `esrgan_model`).
+*   **`engines.fal.config.OutpaintConfig`**: Parameters for outpainting (e.g., `input_image`, `prompt`, `target_width`, `target_height`, `outpaint_tool`).
+*   **`core.lora.LoraRecord`, `LoraLib`, `LoraSpecEntry`, `CombinedLoraSpecEntry`**: Define how LoRAs are represented, stored in a library, and specified for use.
+
+### Extensibility
+
+*   **Adding a New AI Engine:**
+    1.  Create a new module under `src/twat_genai/engines/`.
+    2.  Implement a class that inherits from `ImageGenerationEngine` (in `src/twat_genai/engines/base.py`).
+    3.  Implement the abstract methods: `initialize()`, `generate()`, and `shutdown()`.
+    4.  Define any engine-specific configuration models (similar to `UpscaleConfig` for FAL).
+    5.  Update the CLI and potentially the main API entry points to allow selection and use of the new engine.
+*   **Adding New Models/Operations to the FAL Engine:**
+    1.  Add a new entry to the `ModelTypes` enum in `src/twat_genai/engines/fal/config.py` with the FAL endpoint string.
+    2.  If the new operation requires unique parameters, create a new Pydantic config model (e.g., `NewOperationConfig`) in `engines/fal/config.py`.
+    3.  Add a corresponding processing method in `FalApiClient` (e.g., `process_new_operation()`). This method will handle argument assembly and job submission.
+    4.  Update `FALEngine.generate()` to handle the new `ModelTypes` value, call the new `FalApiClient` method, and pass the appropriate configuration.
+    5.  Add a new subcommand to `TwatGenAiCLI` in `src/twat_genai/cli.py` for the new operation.
+
+### Coding and Contribution Rules
+
+We welcome contributions! Please follow these guidelines:
+
+*   **Code Quality Tools:**
+    *   **Linting & Formatting:** We use [Ruff](https://beta.ruff.rs/docs/). Run `uv run lint` (which executes `ruff check .` and `ruff format .`).
+    *   **Type Checking:** We use [MyPy](http://mypy-lang.org/). Run `uv run type-check` (which executes `mypy src/twat_genai tests`).
+*   **Pre-commit Hooks:**
+    *   The project includes a `.pre-commit-config.yaml`.
+    *   Install hooks with `pre-commit install`. This will automatically run checks (like Ruff and MyPy) before each commit.
+*   **Dependency Management:**
+    *   Dependencies are managed using `uv` and specified in `pyproject.toml`.
+    *   Install development dependencies with `uv pip install -e ".[all]"`.
+*   **Versioning:**
+    *   The project version is dynamically determined from `git` tags using `hatch-vcs`.
+    *   Releases are made by creating a new `git` tag (e.g., `v0.2.0`).
+*   **Branching Strategy:**
+    *   Develop features in separate branches (e.g., `feature/my-new-feature`, `fix/bug-fix`).
+    *   Submit Pull Requests (PRs) to the `main` branch for review.
+*   **Commit Messages:**
+    *   Please follow [Conventional Commits](https://www.conventionalcommits.org/) guidelines.
+    *   Examples: `feat: Add support for XYZ model`, `fix: Correct parameter handling in I2I`, `docs: Update README with API examples`.
+*   **Testing:**
+    *   Tests are written using `pytest` and are located in the `tests/` directory.
+    *   Run tests with `uv run test`.
+    *   All new features and bug fixes should be accompanied by corresponding tests.
+    *   Ensure good test coverage. Check coverage with `uv run test-cov`.
+*   **Documentation:**
+    *   Keep this `README.md` file updated with any changes to functionality, API, or CLI.
+    *   Write clear and concise docstrings for all public modules, classes, and functions.
+    *   Use type hints extensively.
+*   **Python Version:** The project targets Python 3.10 and above.
+
+By following these guidelines, you help maintain the quality and consistency of the `twat-genai` codebase.
