@@ -9,7 +9,96 @@ permissions:
   id-token: write
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install UV
+      uses: astral-sh/setup-uv@v5
+      with:
+        version: "latest"
+        python-version: ${{ matrix.python-version }}
+        enable-cache: true
+    
+    - name: Install dependencies
+      run: |
+        uv venv
+        uv pip install -e ".[all]"
+        uv pip install pytest pytest-cov pytest-asyncio pytest-mock ruff mypy
+    
+    - name: Lint with ruff
+      run: |
+        uv run ruff check src/twat_genai tests
+        uv run ruff format --check src/twat_genai tests
+    
+    - name: Type check with mypy
+      run: |
+        uv run mypy src/twat_genai tests || true
+    
+    - name: Test with pytest
+      run: |
+        uv run python -m pytest tests/ -v --tb=short
+
+  build-executables:
+    needs: test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Install UV
+      uses: astral-sh/setup-uv@v5
+      with:
+        version: "latest"
+        python-version: "3.11"
+        enable-cache: true
+    
+    - name: Install dependencies
+      run: |
+        uv venv
+        uv pip install -e ".[all]"
+        uv pip install pyinstaller
+    
+    - name: Build executable (Linux/macOS)
+      if: runner.os != 'Windows'
+      run: |
+        uv run pyinstaller --onefile --name twat-genai-${{ runner.os }} src/twat_genai/__main__.py
+    
+    - name: Build executable (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        uv run pyinstaller --onefile --name twat-genai-${{ runner.os }}.exe src/twat_genai/__main__.py
+    
+    - name: Upload executable
+      uses: actions/upload-artifact@v4
+      with:
+        name: executable-${{ runner.os }}
+        path: dist/twat-genai-*
+
   release:
+    needs: [test, build-executables]
     name: Release to PyPI
     runs-on: ubuntu-latest
     environment:
@@ -50,10 +139,17 @@ jobs:
         with:
           password: ${{ secrets.PYPI_TOKEN }}
 
+      - name: Download all executable artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          files: dist/*
+          files: |
+            dist/*
+            artifacts/executable-*/*
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 

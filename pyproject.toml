@@ -86,7 +86,7 @@ genai = "twat_genai"
 source = "vcs"
 
 [tool.hatch.version.raw-options]
-version_scheme = "post-release"
+version_scheme = "release-branch-semver"
 
 # VCS hook configuration for version file generation
 [tool.hatch.build.hooks.vcs]
