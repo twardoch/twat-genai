@@ -107,32 +107,24 @@ class FALEngine(ImageGenerationEngine):
                 # Get original dimensions
                 with Image.open(temp_download_path) as img:
                     original_width, original_height = img.size
-                    logger.debug(
-                        f"Original image dimensions: {original_width}x{original_height}"
-                    )
+                    logger.debug(f"Original image dimensions: {original_width}x{original_height}")
 
                 # Resize image if it's an upscaler model and needs resizing
                 image_path_final = temp_download_path
                 if model_type.name.startswith("UPSCALER_"):
-                    logger.debug(
-                        f"Model {model_type.name} is upscaler, checking dimensions..."
-                    )
+                    logger.debug(f"Model {model_type.name} is upscaler, checking dimensions...")
                     temp_resized_path = image_utils.resize_image_if_needed(
                         image_path=temp_download_path, model_type=model_type
                     )
                     if temp_resized_path:
-                        logger.info(
-                            f"Image resized for upscaler to: {temp_resized_path}"
-                        )
+                        logger.info(f"Image resized for upscaler to: {temp_resized_path}")
                         image_path_final = temp_resized_path
 
                         # Re-upload if resized
                         if temp_resized_path != temp_download_path:
                             logger.info("Re-uploading resized image to FAL storage...")
                             image_url = await self.client.upload_image(image_path_final)
-                            logger.info(
-                                f"Resized image uploaded successfully: {image_url}"
-                            )
+                            logger.info(f"Resized image uploaded successfully: {image_url}")
                     else:
                         logger.debug("Upscaler input within limits, no resize needed.")
 
@@ -213,14 +205,10 @@ class FALEngine(ImageGenerationEngine):
                 original_width,
                 original_height,
                 input_path,
-            ) = await self._prepare_image_input(
-                upscale_config.input_image, model_type=model
-            )
+            ) = await self._prepare_image_input(upscale_config.input_image, model_type=model)
 
             # Prepare upscale-specific arguments
-            upscale_args = upscale_config.model_dump(
-                exclude_none=True, exclude={"input_image"}
-            )
+            upscale_args = upscale_config.model_dump(exclude_none=True, exclude={"input_image"})
             upscale_args["prompt"] = prompt  # Add main prompt if provided
 
             # Default output_dir to input image subfolder if no explicit output_dir provided
@@ -228,20 +216,15 @@ class FALEngine(ImageGenerationEngine):
             if not output_dir and input_path:
                 output_dir = input_path.parent / input_path.stem
                 output_dir.mkdir(parents=True, exist_ok=True)
-                logger.debug(
-                    f"Using input image basename for output directory: {output_dir}"
-                )
+                logger.debug(f"Using input image basename for output directory: {output_dir}")
 
-            logger.debug(
-                f"Calling client.process_upscale for {model.name} with args: {upscale_args}"
-            )
+            logger.debug(f"Calling client.process_upscale for {model.name} with args: {upscale_args}")
             return await self.client.process_upscale(
                 image_url=image_url,
                 output_dir=output_dir,
                 filename_suffix=kwargs.get("filename_suffix"),
-                filename_prefix=kwargs.get("filename_prefix")
-                or (input_path.stem if input_path else None),
-                upscaler=model.name.replace("UPSCALER_", "").lower(),
+                filename_prefix=kwargs.get("filename_prefix") or (input_path.stem if input_path else None),
+                upscaler=model.name.replace("UPSCALER_", "").lower(),  # type: ignore[arg-type]
                 **upscale_args,
             )
 
@@ -258,24 +241,17 @@ class FALEngine(ImageGenerationEngine):
                 original_width,
                 original_height,
                 input_path,
-            ) = await self._prepare_image_input(
-                outpaint_config.input_image, model_type=model
-            )
+            ) = await self._prepare_image_input(outpaint_config.input_image, model_type=model)
 
             # Default output_dir to input image subfolder if no explicit output_dir provided
             output_dir = self.output_dir
             if not output_dir and input_path:
                 output_dir = input_path.parent / input_path.stem
                 output_dir.mkdir(parents=True, exist_ok=True)
-                logger.debug(
-                    f"Using input image basename for output directory: {output_dir}"
-                )
+                logger.debug(f"Using input image basename for output directory: {output_dir}")
 
             # Validate target dimensions against original dimensions
-            if (
-                original_width > outpaint_config.target_width
-                or original_height > outpaint_config.target_height
-            ):
+            if original_width > outpaint_config.target_width or original_height > outpaint_config.target_height:
                 msg = (
                     f"Original image ({original_width}x{original_height}) cannot be larger "
                     f"than target size ({outpaint_config.target_width}x{outpaint_config.target_height}) for outpainting."
@@ -296,9 +272,7 @@ class FALEngine(ImageGenerationEngine):
                 )
 
                 # Prepare outpaint-specific arguments
-                outpaint_args = outpaint_config.model_dump(
-                    exclude_none=True, exclude={"input_image"}
-                )
+                outpaint_args = outpaint_config.model_dump(exclude_none=True, exclude={"input_image"})
                 # Overwrite/add calculated values for the API call
                 outpaint_args["image_url"] = image_url
                 outpaint_args["original_image_location"] = original_image_location
@@ -314,9 +288,7 @@ class FALEngine(ImageGenerationEngine):
                 # Ensure num_outputs matches config
                 outpaint_args["num_outputs"] = outpaint_config.num_images
 
-                logger.debug(
-                    f"Calling client.process_outpaint for BRIA with calculated args: {outpaint_args}"
-                )
+                logger.debug(f"Calling client.process_outpaint for BRIA with calculated args: {outpaint_args}")
                 bria_outpaint_result = await self.client.process_outpaint(
                     prompt=prompt,
                     image_url=image_url,
@@ -339,39 +311,25 @@ class FALEngine(ImageGenerationEngine):
                     logger.info("Applying GenFill post-processing for BRIA outpaint.")
                     genfill_mask_path: str | None = None
                     # We need the result from the initial outpaint call
-                    outpaint_result = (
-                        bria_outpaint_result  # Store the result temporarily
-                    )
+                    outpaint_result = bria_outpaint_result  # Store the result temporarily
 
                     try:
                         # Get URL and dimensions of the outpainted image
                         outpainted_image_url = outpaint_result.image_info.get("url")
-                        outpainted_width = outpaint_result.image_info.get(
-                            "width", outpaint_config.target_width
-                        )
-                        outpainted_height = outpaint_result.image_info.get(
-                            "height", outpaint_config.target_height
-                        )
+                        outpainted_width = outpaint_result.image_info.get("width", outpaint_config.target_width)
+                        outpainted_height = outpaint_result.image_info.get("height", outpaint_config.target_height)
 
                         if not outpainted_image_url:
-                            logger.warning(
-                                "No URL found in outpaint result, skipping GenFill."
-                            )
+                            logger.warning("No URL found in outpaint result, skipping GenFill.")
                             return outpaint_result  # Return original if URL missing
 
                         # Calculate border thickness in pixels
                         min_dim = min(outpainted_width, outpainted_height)
-                        border_thickness = round(
-                            min_dim * outpaint_config.border_thickness_factor
-                        )
-                        logger.debug(
-                            f"Calculated GenFill border thickness: {border_thickness}px"
-                        )
+                        border_thickness = round(min_dim * outpaint_config.border_thickness_factor)
+                        logger.debug(f"Calculated GenFill border thickness: {border_thickness}px")
 
                         if border_thickness <= 0:
-                            logger.info(
-                                "Calculated border thickness is zero or less, skipping GenFill."
-                            )
+                            logger.info("Calculated border thickness is zero or less, skipping GenFill.")
                             return outpaint_result
 
                         # Create the border mask
@@ -394,41 +352,27 @@ class FALEngine(ImageGenerationEngine):
                                 # Construct debug mask filename
                                 # Reuse prefix/timestamp logic from flux verbose save if applicable
                                 # Or create a specific naming convention here
-                                filename_prefix = (
-                                    kwargs.get("filename_prefix") or "genfill"
-                                )
+                                filename_prefix = kwargs.get("filename_prefix") or "genfill"
                                 timestamp_short = time.strftime("%Y%m%d%H%M%S")
-                                main_suffix = (
-                                    kwargs.get("filename_suffix") or ""
-                                ) + "_bria_outpaint"
+                                main_suffix = (kwargs.get("filename_suffix") or "") + "_bria_outpaint"
                                 debug_mask_stem = f"{filename_prefix}{timestamp_short}{main_suffix}_genfill_debug_mask"
                                 debug_mask_filename = slugify(debug_mask_stem) + ".png"
-                                debug_mask_save_path = (
-                                    self.output_dir / debug_mask_filename
-                                )
+                                debug_mask_save_path = self.output_dir / debug_mask_filename
 
                                 # Copy the temporary mask file
                                 shutil.copy2(genfill_mask_path, debug_mask_save_path)
-                                logger.info(
-                                    f"Saved debug GenFill mask to: {debug_mask_save_path}"
-                                )
+                                logger.info(f"Saved debug GenFill mask to: {debug_mask_save_path}")
                             except Exception as e:
-                                logger.warning(
-                                    f"Failed to save debug GenFill mask: {e}"
-                                )
+                                logger.warning(f"Failed to save debug GenFill mask: {e}")
                         # --- End Debug GenFill Mask Save ---
 
                         # Upload the mask
                         logger.debug("Uploading GenFill border mask...")
-                        genfill_mask_url = await self.client.upload_image(
-                            genfill_mask_path
-                        )
+                        genfill_mask_url = await self.client.upload_image(genfill_mask_path)
                         logger.info(f"Uploaded GenFill mask: {genfill_mask_url}")
 
                         # Call the genfill process
-                        genfill_suffix = (
-                            kwargs.get("filename_suffix") or ""
-                        ) + "_genfill"
+                        genfill_suffix = (kwargs.get("filename_suffix") or "") + "_genfill"
                         genfill_result = await self.client.process_genfill(
                             prompt=prompt,  # Use original prompt
                             image_url=outpainted_image_url,
@@ -444,31 +388,21 @@ class FALEngine(ImageGenerationEngine):
                         return genfill_result
 
                     except Exception as e:
-                        logger.error(
-                            f"Error during GenFill post-processing: {e}", exc_info=True
-                        )
+                        logger.error(f"Error during GenFill post-processing: {e}", exc_info=True)
                         # Fallback to returning the original outpaint result
-                        logger.warning(
-                            "GenFill failed, returning original outpaint result."
-                        )
+                        logger.warning("GenFill failed, returning original outpaint result.")
                         return outpaint_result
                     finally:
                         # Clean up the temporary genfill mask file
                         if genfill_mask_path:
                             try:
                                 Path(genfill_mask_path).unlink(missing_ok=True)
-                                logger.debug(
-                                    f"Deleted temp GenFill mask: {genfill_mask_path}"
-                                )
+                                logger.debug(f"Deleted temp GenFill mask: {genfill_mask_path}")
                             except Exception as e:
-                                logger.warning(
-                                    f"Failed to clean up GenFill mask file: {e}"
-                                )
+                                logger.warning(f"Failed to clean up GenFill mask file: {e}")
                 else:
                     # No border thickness specified, return original BRIA result
-                    logger.debug(
-                        "Border thickness factor is zero or less, skipping GenFill."
-                    )
+                    logger.debug("Border thickness factor is zero or less, skipping GenFill.")
                     return bria_outpaint_result
 
             elif model == ModelTypes.OUTPAINT_FLUX:
@@ -495,17 +429,13 @@ class FALEngine(ImageGenerationEngine):
                         target_width=outpaint_config.target_width,
                         target_height=outpaint_config.target_height,
                     )
-                    logger.info(
-                        f"Flux assets created: Big Image={big_image_path}, Big Mask={big_mask_path}"
-                    )
+                    logger.info(f"Flux assets created: Big Image={big_image_path}, Big Mask={big_mask_path}")
 
                     # 2. Upload the generated assets
                     logger.debug("Uploading flux assets...")
                     big_image_url = await self.client.upload_image(big_image_path)
                     big_mask_url = await self.client.upload_image(big_mask_path)
-                    logger.info(
-                        f"Flux assets uploaded: Big Image URL={big_image_url}, Big Mask URL={big_mask_url}"
-                    )
+                    logger.info(f"Flux assets uploaded: Big Image URL={big_image_url}, Big Mask URL={big_mask_url}")
 
                     # --- Save Debug Mask if Verbose ---
                     is_verbose = kwargs.get("verbose", False)
@@ -530,9 +460,7 @@ class FALEngine(ImageGenerationEngine):
                             timestamp_short = time.strftime("%Y%m%d%H%M%S")
 
                             # Suffix for the main output image
-                            main_suffix = (
-                                kwargs.get("filename_suffix") or "_flux_outpaint"
-                            )
+                            main_suffix = kwargs.get("filename_suffix") or "_flux_outpaint"
 
                             # Construct debug mask filename
                             debug_mask_stem = f"{filename_prefix}{timestamp_short}{main_suffix}_debug_mask"
@@ -543,9 +471,7 @@ class FALEngine(ImageGenerationEngine):
 
                             # Copy the temporary mask file
                             shutil.copy2(big_mask_path, debug_mask_save_path)
-                            logger.info(
-                                f"Saved debug flux mask to: {debug_mask_save_path}"
-                            )
+                            logger.info(f"Saved debug flux mask to: {debug_mask_save_path}")
                         except Exception as e:
                             logger.warning(f"Failed to save debug flux mask: {e}")
                     # --- End Debug Mask Save ---
@@ -560,10 +486,8 @@ class FALEngine(ImageGenerationEngine):
                         "lora_spec": kwargs.get("lora_spec"),
                         "width": outpaint_config.target_width,  # Target size
                         "height": outpaint_config.target_height,  # Target size
-                        "guidance_scale": outpaint_config.guidance_scale
-                        or config.guidance_scale,
-                        "num_inference_steps": outpaint_config.num_inference_steps
-                        or config.num_inference_steps,
+                        "guidance_scale": outpaint_config.guidance_scale or config.guidance_scale,
+                        "num_inference_steps": outpaint_config.num_inference_steps or config.num_inference_steps,
                         "negative_prompt": outpaint_config.negative_prompt,
                         "enable_safety_checker": outpaint_config.enable_safety_checker,
                         "num_images": outpaint_config.num_images,
@@ -572,9 +496,7 @@ class FALEngine(ImageGenerationEngine):
                         "strength": 0.85,  # Default from flux inpaint docs
                     }
 
-                    logger.debug(
-                        f"Calling client.process_outpaint (as inpaint) for FLUX with args: {args}"
-                    )
+                    logger.debug(f"Calling client.process_outpaint (as inpaint) for FLUX with args: {args}")
                     # Call process_outpaint, but provide the big_image and big_mask URLs
                     # The client method might need adjustment if it doesn't handle this case,
                     # but let's assume it uses image_url and mask_url appropriately.
@@ -583,8 +505,7 @@ class FALEngine(ImageGenerationEngine):
                         image_url=big_image_url,  # Use the big image URL
                         lora_spec=kwargs.get("lora_spec"),
                         output_dir=self.output_dir,
-                        filename_suffix=kwargs.get("filename_suffix")
-                        or "_flux_outpaint",
+                        filename_suffix=kwargs.get("filename_suffix") or "_flux_outpaint",
                         filename_prefix=kwargs.get("filename_prefix"),
                         outpaint_tool="flux",  # Still identify as flux
                         target_width=outpaint_config.target_width,
@@ -609,17 +530,13 @@ class FALEngine(ImageGenerationEngine):
                                 Path(file_path).unlink(missing_ok=True)
                                 logger.debug(f"Deleted temp file: {file_path}")
                             except Exception as e:
-                                logger.warning(
-                                    f"Failed to clean up temporary asset file {file_path}: {e}"
-                                )
+                                logger.warning(f"Failed to clean up temporary asset file {file_path}: {e}")
 
         # --- Handle Text-to-Image ---
         elif model == ModelTypes.TEXT:
             # Check for image_config (should not be provided for TTI)
             if kwargs.get("image_config"):
-                logger.warning(
-                    "image_config provided for TEXT model, but will be ignored."
-                )
+                logger.warning("image_config provided for TEXT model, but will be ignored.")
 
             logger.debug(f"Calling client.process_tti for {model.name}")
             return await self.client.process_tti(
@@ -638,9 +555,7 @@ class FALEngine(ImageGenerationEngine):
         elif model in [ModelTypes.IMAGE, ModelTypes.CANNY, ModelTypes.DEPTH]:
             image_config: ImageToImageConfig | None = kwargs.get("image_config")
             if not image_config or not image_config.input_image:
-                msg = (
-                    "image_config with input_image is required for image-based models."
-                )
+                msg = "image_config with input_image is required for image-based models."
                 raise ValueError(msg)
 
             # Prepare image input URL and get dimensions
@@ -649,18 +564,14 @@ class FALEngine(ImageGenerationEngine):
                 original_width,
                 original_height,
                 input_path,
-            ) = await self._prepare_image_input(
-                image_config.input_image, model_type=model
-            )
+            ) = await self._prepare_image_input(image_config.input_image, model_type=model)
 
             # Default output_dir to input image subfolder if no explicit output_dir provided
             output_dir = self.output_dir
             if not output_dir and input_path:
                 output_dir = input_path.parent / input_path.stem
                 output_dir.mkdir(parents=True, exist_ok=True)
-                logger.debug(
-                    f"Using input image basename for output directory: {output_dir}"
-                )
+                logger.debug(f"Using input image basename for output directory: {output_dir}")
 
             # Select appropriate client method based on model type
             if model == ModelTypes.IMAGE:
@@ -671,8 +582,7 @@ class FALEngine(ImageGenerationEngine):
                     lora_spec=kwargs.get("lora_spec"),
                     output_dir=output_dir,
                     filename_suffix=kwargs.get("filename_suffix"),
-                    filename_prefix=kwargs.get("filename_prefix")
-                    or (input_path.stem if input_path else None),
+                    filename_prefix=kwargs.get("filename_prefix") or (input_path.stem if input_path else None),
                     strength=image_config.strength,
                     guidance_scale=config.guidance_scale,
                     num_inference_steps=config.num_inference_steps,
@@ -687,8 +597,7 @@ class FALEngine(ImageGenerationEngine):
                     lora_spec=kwargs.get("lora_spec"),
                     output_dir=output_dir,
                     filename_suffix=kwargs.get("filename_suffix"),
-                    filename_prefix=kwargs.get("filename_prefix")
-                    or (input_path.stem if input_path else None),
+                    filename_prefix=kwargs.get("filename_prefix") or (input_path.stem if input_path else None),
                     guidance_scale=config.guidance_scale,
                     num_inference_steps=config.num_inference_steps,
                     image_size=config.image_size,
@@ -702,8 +611,7 @@ class FALEngine(ImageGenerationEngine):
                     lora_spec=kwargs.get("lora_spec"),
                     output_dir=output_dir,
                     filename_suffix=kwargs.get("filename_suffix"),
-                    filename_prefix=kwargs.get("filename_prefix")
-                    or (input_path.stem if input_path else None),
+                    filename_prefix=kwargs.get("filename_prefix") or (input_path.stem if input_path else None),
                     guidance_scale=config.guidance_scale,
                     num_inference_steps=config.num_inference_steps,
                     image_size=config.image_size,

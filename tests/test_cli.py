@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, AsyncMock, Mock
 from pathlib import Path
 
 # Module to test
-from twat_genai.cli import TwatGenAiCLI # Import the class
+from twat_genai.cli import TwatGenAiCLI  # Import the class
 from twat_genai.engines.fal.config import ModelTypes
 from twat_genai.engines.base import EngineConfig
 from twat_genai.core.config import ImageSizeWH
@@ -28,13 +28,13 @@ def mock_async_main(mocker: Mock) -> AsyncMock:
 @pytest.fixture
 def mock_fal_engine(mocker: Mock) -> MagicMock:
     """Mocks the FALEngine class and its methods."""
-    mock_engine_class = mocker.patch("twat_genai.cli.FALEngine", autospec=True) # Patch where it's used by CLI
+    mock_engine_class = mocker.patch("twat_genai.cli.FALEngine", autospec=True)  # Patch where it's used by CLI
     mock_instance = mock_engine_class.return_value
     mock_instance.generate = AsyncMock()
     # Mock the async context manager methods
     mock_instance.__aenter__ = AsyncMock(return_value=mock_instance)
     mock_instance.__aexit__ = AsyncMock()
-    return mock_engine_class # Return the mocked class
+    return mock_engine_class  # Return the mocked class
 
 
 # --- Test Cases ---
@@ -51,7 +51,7 @@ async def test_cli_text_basic(mock_fal_engine: MagicMock) -> None:
     cli_instance.text(prompts=prompts)
 
     # Assert FALEngine was initialized and called
-    mock_fal_engine.assert_called_once_with(Path(output_dir).resolve()) # FALEngine now resolves path
+    mock_fal_engine.assert_called_once_with(Path(output_dir).resolve())  # FALEngine now resolves path
     mock_fal_engine.return_value.__aenter__.assert_awaited_once()
 
     # Check the arguments passed to engine.generate
@@ -132,7 +132,7 @@ async def test_cli_text_with_options(mock_fal_engine: MagicMock) -> None:
 
     # FALEngine is instantiated once for the CLI instance, context manager entered once per call to _run_generation
     # Since _run_generation is called once (handling multiple prompts internally), __aenter__ and __aexit__ called once.
-    mock_fal_engine.assert_called_once() # Class instantiation
+    mock_fal_engine.assert_called_once()  # Class instantiation
     mock_fal_engine.return_value.__aenter__.assert_awaited_once()
     mock_fal_engine.return_value.__aexit__.assert_awaited_once()
 

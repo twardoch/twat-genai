@@ -22,8 +22,8 @@ from datetime import datetime
 import json
 import time
 
-import fal_client
-from fal_client.client import FalClientError  # Add direct import for FalClientError
+import fal_client  # type: ignore[import-not-found]
+from fal_client.client import FalClientError  # type: ignore[import-not-found]
 from twat_genai.core.config import ImageResult
 
 # Import ModelTypes, the unified enum
@@ -55,9 +55,7 @@ async def _download_image_helper(url: str, output_path: Path) -> None:
             output_path.write_bytes(response.content)
             logger.info(f"Saved result image to: {output_path}")
     except httpx.RequestError as e:
-        logger.error(
-            f"HTTP error downloading result image from {url}: {e}", exc_info=True
-        )
+        logger.error(f"HTTP error downloading result image from {url}: {e}", exc_info=True)
         msg = f"Failed to download result image from {url}: {e}"
         raise RuntimeError(msg) from e
     except Exception as e:
@@ -80,7 +78,7 @@ async def _submit_fal_job(model_endpoint: str, arguments: dict[str, Any]) -> str
     logger.debug(f"Submitting job to {model_endpoint} with args: {arguments}")
     handler = await fal_client.submit_async(model_endpoint, arguments=arguments)
     logger.info(f"Submitted job to {model_endpoint} with ID: {handler.request_id}")
-    return handler.request_id
+    return str(handler.request_id)
 
 
 # --- FalApiClient Class ---
@@ -92,7 +90,7 @@ class FalApiClient:
     Encapsulates job submission and result handling for different operations.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the API client."""
         # TODO: Integrate with FALEngine key handling? Ensure FAL_KEY is checked.
         pass  # No state needed currently, methods use fal_client directly
@@ -112,7 +110,7 @@ class FalApiClient:
             logger.debug(f"Uploading image from: {path_obj}")
             response = await fal_client.upload_file_async(path_obj)
             logger.info(f"Image uploaded to: {response}")
-            return response
+            return str(response)
         except Exception as e:
             logger.error(f"Failed to upload image {image_path}: {e}", exc_info=True)
             msg = f"Failed to upload image: {e!s}"
@@ -246,9 +244,7 @@ class FalApiClient:
             msg = f"Invalid outpaint tool choice: {outpaint_tool}. Valid choices: {list(outpaint_map.keys())}"
             raise ValueError(msg)
 
-        logger.info(
-            f"Processing outpaint job with {outpaint_tool} ({model_type.value})"
-        )
+        logger.info(f"Processing outpaint job with {outpaint_tool} ({model_type.value})")
 
         endpoint = model_type.value
 
@@ -297,12 +293,14 @@ class FalApiClient:
             if lora_spec:
                 from twat_genai.engines.fal.lora import build_lora_arguments
 
-                lora_args = build_lora_arguments(lora_spec)
-                fal_args.update(lora_args)
+                lora_list, final_prompt = await build_lora_arguments(lora_spec, prompt)
+                if lora_list:
+                    fal_args["loras"] = lora_list
+                fal_args["prompt"] = final_prompt
 
         else:
             # This should never happen due to the validation above
-            msg = f"Unexpected outpaint tool: {outpaint_tool}"
+            msg = f"Unexpected outpaint tool: {outpaint_tool}"  # type: ignore[unreachable]
             raise ValueError(msg)
 
         logger.debug(f"Final FAL arguments for outpaint: {fal_args}")
@@ -336,7 +334,7 @@ class FalApiClient:
             )
         except Exception as e:
             logger.error("Outpaint process failed: {}", repr(e), exc_info=True)
-            msg = f"Outpaint process failed: {repr(e)}"
+            msg = f"Outpaint process failed: {e!r}"
             raise RuntimeError(msg) from e
 
     async def process_depth(
@@ -406,7 +404,7 @@ class FalApiClient:
                 raise ValueError(msg)
 
         # Prepare base arguments
-        fal_args = {"prompt": prompt}
+        fal_args: dict[str, Any] = {"prompt": prompt}
 
         # Add image URL for image-to-image and controlnet variants
         if image_url:
@@ -473,8 +471,8 @@ class FalApiClient:
             # build_lora_arguments is async and expects prompt
             lora_list, final_prompt = await build_lora_arguments(lora_spec, prompt)
             if lora_list:
-                fal_args["loras"] = lora_list # FAL expects "loras" key
-            fal_args["prompt"] = final_prompt # Update prompt with LoRA triggers
+                fal_args["loras"] = lora_list  # FAL expects "loras" key
+            fal_args["prompt"] = final_prompt  # Update prompt with LoRA triggers
 
         logger.debug(f"Final FAL arguments: {fal_args}")
 
@@ -486,8 +484,7 @@ class FalApiClient:
             job_params = {
                 "model": endpoint,
                 "prompt": prompt,
-                "input_image_url": input_image_url
-                or image_url,  # Include input URL for filename generation
+                "input_image_url": input_image_url or image_url,  # Include input URL for filename generation
                 **kwargs,  # Include all passed config params
                 # Include original args that may have been transformed
                 "lora": lora_spec if lora_spec else None,
@@ -625,9 +622,7 @@ class FalApiClient:
         job_params = {k: v for k, v in job_params.items() if v is not None}
 
         try:
-            logger.info(
-                f"Submitting GenFill job to {model_endpoint} with params: {job_params}"
-            )
+            logger.info(f"Submitting GenFill job to {model_endpoint} with params: {job_params}")
             request_id = await _submit_fal_job(model_endpoint, job_params)
             logger.info(f"Submitted GenFill job {request_id}")
 
@@ -696,9 +691,7 @@ class FalApiClient:
             # Download and save the result images if output_dir is provided
             if output_dir:
                 timestamp = time.strftime("%Y%m%d%H%M%S")
-                base_filename = (
-                    f"{filename_prefix or ''}{timestamp}{filename_suffix or ''}"
-                )
+                base_filename = f"{filename_prefix or ''}{timestamp}{filename_suffix or ''}"
                 base_filename = slugify(base_filename)
 
                 # Ensure the output directory exists
@@ -712,13 +705,9 @@ class FalApiClient:
 
                     # Derive file extension from mimetype, with fallback to jpg
                     mimetype = img_dict.get("mimetype", "image/jpeg")
-                    extension = mimetype.split("/")[-1].split("+")[
-                        0
-                    ]  # e.g. 'image/jpeg+xml' -> 'jpeg'
+                    extension = mimetype.split("/")[-1].split("+")[0]  # e.g. 'image/jpeg+xml' -> 'jpeg'
                     if extension not in {"jpeg", "jpg", "png", "webp", "gif"}:
-                        logger.warning(
-                            f"Unrecognized mimetype {mimetype}, defaulting to jpg."
-                        )
+                        logger.warning(f"Unrecognized mimetype {mimetype}, defaulting to jpg.")
                         extension = "jpg"
 
                     # Create numbered filenames if multiple results
@@ -761,9 +750,7 @@ class FalApiClient:
             return ImageResult(
                 request_id=request_id,
                 timestamp=datetime.now().strftime("%Y%m%d%H%M%S"),
-                result=result
-                if isinstance(result, dict)
-                else {"raw_result": str(result)},
+                result=result if isinstance(result, dict) else {"raw_result": str(result)},
                 image_info=image_dicts[0],
                 original_prompt=original_prompt,
                 job_params=job_params,
@@ -775,30 +762,24 @@ class FalApiClient:
                 # Try to access the error details, which might be a list of dicts or a string
                 error_details = e.args[0] if e.args else str(e)
                 logger.error("FAL API error: {}", repr(error_details))
-            except Exception as nested:
+            except Exception:
                 # If there's an issue accessing/formatting the error, use a safer repr
                 logger.error("FAL API error (details unavailable): {}", repr(e))
 
             # Re-raise with a more readable message
-            raise RuntimeError(f"FAL API error: {repr(e)}") from e
+            raise RuntimeError(f"FAL API error: {e!r}") from e
 
         except Exception as e:
             # For other exceptions, just log and re-raise
-            logger.error(
-                f"Error during FAL result processing: {repr(e)}", exc_info=True
-            )
-            raise RuntimeError(f"Error processing FAL result: {repr(e)}") from e
+            logger.error(f"Error during FAL result processing: {e!r}", exc_info=True)
+            raise RuntimeError(f"Error processing FAL result: {e!r}") from e
 
-    def _get_result_extractor(
-        self, model_endpoint: str
-    ) -> Callable[[dict[str, Any]], list[dict[str, Any]]]:
+    def _get_result_extractor(self, model_endpoint: str) -> Callable[[dict[str, Any]], list[dict[str, Any]]]:
         """Return the appropriate result extraction function based on model endpoint."""
         # TODO: Implement specific extractors for different model types
         if model_endpoint == ModelTypes.OUTPAINT_BRIA.value:
             # return self._extract_outpaint_info # Placeholder
-            logger.warning(
-                f"Using generic extractor for outpaint model {model_endpoint}"
-            )
+            logger.warning(f"Using generic extractor for outpaint model {model_endpoint}")
             return FalApiClient._extract_generic_image_info
         elif (
             model_endpoint.startswith("fal-ai/drct")
@@ -810,9 +791,7 @@ class FalApiClient:
             or model_endpoint.startswith("fal-ai/clarity-upscaler")
         ):
             # return self._extract_upscale_info # Placeholder
-            logger.warning(
-                f"Using generic extractor for upscale model {model_endpoint}"
-            )
+            logger.warning(f"Using generic extractor for upscale model {model_endpoint}")
             return FalApiClient._extract_generic_image_info
         else:  # Default to generic TTI/I2I extractor
             # return self._extract_tti_i2i_info # Placeholder
@@ -867,26 +846,20 @@ class FalApiClient:
             elif "image" in result:
                 if isinstance(result["image"], list):
                     extracted_list = [_create_info_dict(img) for img in result["image"]]
-                elif isinstance(result["image"], dict) or isinstance(
-                    result["image"], str
-                ):
+                elif isinstance(result["image"], dict) or isinstance(result["image"], str):
                     # Single image dictionary or URL string
                     extracted_list = [_create_info_dict(result["image"])]
             elif "url" in result and isinstance(result["url"], str):
                 # Single image URL string at top level
                 extracted_list = [_create_info_dict(result["url"])]
             else:
-                logger.warning(
-                    f"No standard image key (images, image, url) found in API response: {result}"
-                )
+                logger.warning(f"No standard image key (images, image, url) found in API response: {result}")
                 return []  # Return empty list
 
             # Filter out entries without a URL
             valid_extracted_list = [info for info in extracted_list if info.get("url")]
             if not valid_extracted_list:
-                logger.warning(
-                    f"Extractor found image keys but no valid URLs in result: {result}"
-                )
+                logger.warning(f"Extractor found image keys but no valid URLs in result: {result}")
 
             return valid_extracted_list
 

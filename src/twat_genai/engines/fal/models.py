@@ -10,9 +10,9 @@ from typing import Any
 
 # Try importing fal_client, but make its usage conditional or handle absence
 try:
-    import fal_client
+    import fal_client  # type: ignore[import-not-found]
 except ImportError:
-    fal_client = None  # type: ignore
+    fal_client = None
     # logger.warning("fal_client not found. Image upload functionality will be limited.") # Requires logger
 
 from twat_genai.core.config import ImageInput  # Use absolute import
@@ -53,7 +53,7 @@ class FALImageInput(ImageInput):
             raise ImportError(msg)
 
         if self.path:
-            return await fal_client.upload_file_async(self.path)
+            return str(await fal_client.upload_file_async(self.path))
         elif self.pil_image:
             # For PIL images, save to a temporary file first
             with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp:
@@ -70,7 +70,7 @@ class FALImageInput(ImageInput):
                     except OSError:
                         # logger.warning(f"Could not delete temp file {tmp_path}: {e}") # Requires logger
                         pass  # Log warning, but don't fail the operation
-                return upload_url
+                return str(upload_url)
         else:
             # This should not happen if is_valid is checked before calling
             msg = "No valid image input (URL, Path, PIL Image) provided to convert to URL."

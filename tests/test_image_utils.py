@@ -23,8 +23,8 @@ async def test_download_image_to_temp_success(mocker):
     # Mock httpx response
     mock_response = AsyncMock()
     mock_response.content = b"fake image data"  # This is fine for AsyncMock if not directly awaited
-    mock_response.headers = {"content-type": "image/jpeg"} # This needs to be a direct dict
-    mock_response.raise_for_status = MagicMock() # This is fine
+    mock_response.headers = {"content-type": "image/jpeg"}  # This needs to be a direct dict
+    mock_response.raise_for_status = MagicMock()  # This is fine
 
     # Mock httpx client's get method
     async def mock_get(*args, **kwargs):
@@ -34,7 +34,7 @@ async def test_download_image_to_temp_success(mocker):
     mock_client_instance.get = mock_get
 
     mock_async_client_context_manager = AsyncMock()
-    mock_async_client_context_manager.__aenter__.return_value = mock_client_instance # mock client instance
+    mock_async_client_context_manager.__aenter__.return_value = mock_client_instance  # mock client instance
 
     mocker.patch("httpx.AsyncClient", return_value=mock_async_client_context_manager)
 
@@ -47,9 +47,7 @@ async def test_download_image_to_temp_success(mocker):
     temp_path = await download_image_to_temp("http://fake.url/img.jpg")
 
     mock_async_client.assert_called_once()
-    mock_client.get.assert_called_once_with(
-        "http://fake.url/img.jpg", follow_redirects=True
-    )
+    mock_client.get.assert_called_once_with("http://fake.url/img.jpg", follow_redirects=True)
     mock_named_temp_file.assert_called_once_with(suffix=".jpg", delete=False)
     mock_file_handle.write.assert_called_once_with(b"fake image data")
     assert temp_path == "/tmp/fake_temp_file.jpg"
@@ -68,9 +66,7 @@ async def test_download_image_to_temp_http_error(mocker):
     mock_client.get.return_value = mock_response
     mocker.patch("httpx.AsyncClient", return_value=mock_client)
 
-    with pytest.raises(
-        RuntimeError, match="Failed to download image"
-    ):  # Match the wrapped error
+    with pytest.raises(RuntimeError, match="Failed to download image"):  # Match the wrapped error
         await download_image_to_temp("http://fake.url/img.jpg")
 
 
@@ -84,8 +80,8 @@ async def test_download_image_success(mocker, tmp_path):
 
     # Mock httpx response
     mock_response = AsyncMock()
-    mock_response.content = b"fake png data" # direct assignment for read by write_bytes
-    mock_response.headers = {"content-type": "image/png"} # direct dict
+    mock_response.content = b"fake png data"  # direct assignment for read by write_bytes
+    mock_response.headers = {"content-type": "image/png"}  # direct dict
     mock_response.raise_for_status = MagicMock()
 
     # Mock httpx client's get method
@@ -102,7 +98,7 @@ async def test_download_image_success(mocker, tmp_path):
 
     await download_image("http://fake.url/img.png", output_path)
 
-    mock_client_instance.get.assert_called_once_with( # Check call on the instance
+    mock_client_instance.get.assert_called_once_with(  # Check call on the instance
         "http://fake.url/img.png", follow_redirects=True
     )
     assert output_path.exists()
@@ -140,12 +136,11 @@ def mock_upscale_sizes(mocker):
     # this patch target would need to change to where image_utils *sees* it.
     # Based on the plan, image_utils.py should be updated to import from engines.fal.config.
 
+
 def test_resize_needed(dummy_image_file):
     "Test when resizing is needed."
     # Test with DRCT (max 2048), image is 3000x2000 -> should resize based on width
-    resized_path_str = resize_image_if_needed(
-        str(dummy_image_file), ModelTypes.UPSCALER_DRCT
-    )
+    resized_path_str = resize_image_if_needed(str(dummy_image_file), ModelTypes.UPSCALER_DRCT)
     assert resized_path_str is not None
     resized_path = Path(resized_path_str)
     assert resized_path.exists()
@@ -162,9 +157,7 @@ def test_resize_not_needed(dummy_image_file):
     img = Image.new("RGB", (1000, 800), color="blue")
     img.save(small_img_path)
 
-    resized_path_str = resize_image_if_needed(
-        str(small_img_path), ModelTypes.UPSCALER_DRCT
-    )
+    resized_path_str = resize_image_if_needed(str(small_img_path), ModelTypes.UPSCALER_DRCT)
     assert resized_path_str is None
 
 

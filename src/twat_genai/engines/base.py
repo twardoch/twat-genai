@@ -38,9 +38,7 @@ class ImageGenerationEngine(ABC):
         """Initialize the engine and any required resources."""
 
     @abstractmethod
-    async def generate(
-        self, prompt: str, config: EngineConfig, **kwargs: Any
-    ) -> ImageResult:
+    async def generate(self, prompt: str, config: EngineConfig, **kwargs: Any) -> ImageResult:
         """
         Generate an image from the given prompt and configuration.
 

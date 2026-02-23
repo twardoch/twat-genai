@@ -35,9 +35,7 @@ def resize_image_if_needed(image_path: str, model_type: ModelTypes) -> str | Non
     """
     # Only resize for known upscale models with size limits
     if model_type not in UPSCALE_TOOL_MAX_INPUT_SIZES:
-        logger.debug(
-            f"No max size defined or not an upscaler: {model_type.name}, skipping resize check."
-        )
+        logger.debug(f"No max size defined or not an upscaler: {model_type.name}, skipping resize check.")
         return None
 
     try:
@@ -47,9 +45,7 @@ def resize_image_if_needed(image_path: str, model_type: ModelTypes) -> str | Non
 
             # Check if resizing is needed
             if width <= max_size and height <= max_size:
-                logger.debug(
-                    f"Image size {width}x{height} is within limits for {model_type.name}, no resize needed."
-                )
+                logger.debug(f"Image size {width}x{height} is within limits for {model_type.name}, no resize needed.")
                 return None  # No resize needed
 
             # Calculate new dimensions while maintaining aspect ratio
@@ -61,9 +57,7 @@ def resize_image_if_needed(image_path: str, model_type: ModelTypes) -> str | Non
                 new_width = int(width * (max_size / height))
 
             # Create resized image
-            logger.debug(
-                f"Resizing image from {width}x{height} to {new_width}x{new_height} for {model_type.name}"
-            )
+            logger.debug(f"Resizing image from {width}x{height} to {new_width}x{new_height} for {model_type.name}")
             resized = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
 
             # Save to a new temporary file
@@ -72,9 +66,7 @@ def resize_image_if_needed(image_path: str, model_type: ModelTypes) -> str | Non
             suffix = f".{img_format.lower()}"
             with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
                 resized.save(tmp.name, format=img_format, quality=95)
-                logger.info(
-                    f"Image resized ({new_width}x{new_height}) and saved to temporary file: {tmp.name}"
-                )
+                logger.info(f"Image resized ({new_width}x{new_height}) and saved to temporary file: {tmp.name}")
                 return tmp.name
 
     except FileNotFoundError:
@@ -120,9 +112,7 @@ async def download_image_to_temp(url: str) -> str:
             # Create a temporary file
             with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
                 tmp.write(response.content)
-                logger.info(
-                    f"Image downloaded from {url} to temporary file: {tmp.name}"
-                )
+                logger.info(f"Image downloaded from {url} to temporary file: {tmp.name}")
                 return tmp.name
     except httpx.RequestError as e:
         logger.error(f"HTTP error downloading image from {url}: {e}", exc_info=True)
@@ -149,9 +139,7 @@ async def download_image(url: str, output_path: str | Path) -> None:
             response.raise_for_status()
             # Ensure output_path is a Path object
             output_path_obj = Path(output_path)
-            output_path_obj.parent.mkdir(
-                parents=True, exist_ok=True
-            )  # Ensure dir exists
+            output_path_obj.parent.mkdir(parents=True, exist_ok=True)  # Ensure dir exists
             output_path_obj.write_bytes(response.content)
             logger.info(f"Image downloaded from {url} and saved to: {output_path_obj}")
     except httpx.RequestError as e:
@@ -184,9 +172,7 @@ def create_outpaint_mask(
     Returns:
         tuple[str, list[int]]: Path to the mask image and position [x, y] of the original image
     """
-    logger.debug(
-        f"Creating outpaint mask for {image_width}x{image_height} -> {target_width}x{target_height}"
-    )
+    logger.debug(f"Creating outpaint mask for {image_width}x{image_height} -> {target_width}x{target_height}")
 
     # Calculate the position of the original image in the target image (centered)
     offset_x = (target_width - image_width) // 2
@@ -255,30 +241,20 @@ async def create_flux_inpainting_assets(
             small_mask_img = None
             if input_img.mode in ("RGBA", "LA") or (input_img.info.get("transparency")):
                 try:
-                    logger.debug(
-                        "Input image has alpha channel. Extracting and inverting."
-                    )
+                    logger.debug("Input image has alpha channel. Extracting and inverting.")
                     alpha = input_img.getchannel("A")
                     # Invert: Transparent (0) -> White (255), Opaque (255) -> Black (0)
                     small_mask_img = alpha.point(lambda p: 255 - p)
                     small_mask_img = small_mask_img.convert("L")  # Ensure grayscale
                 except ValueError:
-                    logger.warning(
-                        "Could not get alpha channel, creating black small mask."
-                    )
-                    small_mask_img = Image.new(
-                        "L", (input_width, input_height), color=0
-                    )
+                    logger.warning("Could not get alpha channel, creating black small mask.")
+                    small_mask_img = Image.new("L", (input_width, input_height), color=0)
             else:
-                logger.debug(
-                    "Input image has no alpha channel. Creating black small mask."
-                )
+                logger.debug("Input image has no alpha channel. Creating black small mask.")
                 small_mask_img = Image.new("L", (input_width, input_height), color=0)
 
             # --- Crop the small mask --- #
-            if (
-                input_width > 4 and input_height > 4
-            ):  # Ensure image is large enough to crop
+            if input_width > 4 and input_height > 4:  # Ensure image is large enough to crop
                 crop_box = (2, 2, input_width - 2, input_height - 2)
                 logger.debug(f"Cropping small mask with box: {crop_box}")
                 cropped_small_mask_img = small_mask_img.crop(crop_box)
@@ -291,9 +267,7 @@ async def create_flux_inpainting_assets(
             # --- End Crop ---
 
             # Save small mask temporarily (use the cropped version)
-            with tempfile.NamedTemporaryFile(
-                suffix="_small_mask_cropped.png", delete=False
-            ) as tmp_small_mask:
+            with tempfile.NamedTemporaryFile(suffix="_small_mask_cropped.png", delete=False) as tmp_small_mask:
                 cropped_small_mask_img.save(tmp_small_mask.name, "PNG")
                 small_mask_path = tmp_small_mask.name
                 temp_files_to_clean.append(small_mask_path)
@@ -301,21 +275,13 @@ async def create_flux_inpainting_assets(
 
             # 3. Create 'big image' (transparent canvas with input centered)
             logger.debug("Creating big image (transparent canvas).")
-            big_image_img = Image.new(
-                "RGBA", (target_width, target_height), (0, 0, 0, 0)
-            )
+            big_image_img = Image.new("RGBA", (target_width, target_height), (0, 0, 0, 0))
             # Paste input image using its own alpha if available
-            paste_mask = (
-                input_img.split()[-1] if input_img.mode in ("RGBA", "LA") else None
-            )
-            big_image_img.paste(
-                input_img.convert("RGBA"), tuple(position), mask=paste_mask
-            )
+            paste_mask = input_img.split()[-1] if input_img.mode in ("RGBA", "LA") else None
+            big_image_img.paste(input_img.convert("RGBA"), tuple(position), mask=paste_mask)
 
             # Save big image
-            with tempfile.NamedTemporaryFile(
-                suffix="_big_image.png", delete=False
-            ) as tmp_big_image:
+            with tempfile.NamedTemporaryFile(suffix="_big_image.png", delete=False) as tmp_big_image:
                 big_image_img.save(tmp_big_image.name, "PNG")
                 big_image_path = tmp_big_image.name
                 temp_files_to_clean.append(big_image_path)
@@ -328,9 +294,7 @@ async def create_flux_inpainting_assets(
             big_mask_img.paste(cropped_small_mask_img, paste_position_big_mask)
 
             # Save big mask
-            with tempfile.NamedTemporaryFile(
-                suffix="_big_mask.png", delete=False
-            ) as tmp_big_mask:
+            with tempfile.NamedTemporaryFile(suffix="_big_mask.png", delete=False) as tmp_big_mask:
                 big_mask_img.save(tmp_big_mask.name, "PNG")
                 big_mask_path = tmp_big_mask.name
                 temp_files_to_clean.append(big_mask_path)
@@ -417,9 +381,7 @@ def create_genfill_border_mask(
 
     # Calculate border dimensions (10% inside, 90% outside)
     inside_border = round(border_thickness * 0.10)
-    outside_border = (
-        border_thickness - inside_border
-    )  # Ensure total thickness is correct
+    outside_border = border_thickness - inside_border  # Ensure total thickness is correct
 
     # Calculate the coordinates for the white border rectangle
     # Outer bounds
@@ -435,32 +397,22 @@ def create_genfill_border_mask(
     hole_bottom = orig_bottom - inside_border
 
     # Draw the outer white rectangle
-    logger.debug(
-        f"Drawing outer white border: ({border_left}, {border_top}) to ({border_right}, {border_bottom})"
-    )
+    logger.debug(f"Drawing outer white border: ({border_left}, {border_top}) to ({border_right}, {border_bottom})")
     draw.rectangle(((border_left, border_top), (border_right, border_bottom)), fill=255)
 
     # Draw the inner black rectangle (punching the hole)
     # Ensure the hole coordinates are valid (right > left, bottom > top)
     if hole_right > hole_left and hole_bottom > hole_top:
-        logger.debug(
-            f"Drawing inner black hole: ({hole_left}, {hole_top}) to ({hole_right}, {hole_bottom})"
-        )
+        logger.debug(f"Drawing inner black hole: ({hole_left}, {hole_top}) to ({hole_right}, {hole_bottom})")
         draw.rectangle(((hole_left, hole_top), (hole_right, hole_bottom)), fill=0)
     else:
-        logger.warning(
-            "Border thickness too large relative to original image; inner hole not drawn."
-        )
+        logger.warning("Border thickness too large relative to original image; inner hole not drawn.")
 
     # Save to a temporary file
     try:
-        with tempfile.NamedTemporaryFile(
-            suffix="_genfill_mask.png", delete=False
-        ) as tmp:
+        with tempfile.NamedTemporaryFile(suffix="_genfill_mask.png", delete=False) as tmp:
             mask_img.save(tmp.name, format="PNG")
-            logger.info(
-                f"Created GenFill border mask and saved to temporary file: {tmp.name}"
-            )
+            logger.info(f"Created GenFill border mask and saved to temporary file: {tmp.name}")
             return tmp.name
     except Exception as e:
         logger.error(f"Failed to save GenFill mask: {e}", exc_info=True)

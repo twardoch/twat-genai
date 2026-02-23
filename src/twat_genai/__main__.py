@@ -10,7 +10,7 @@ Delegates directly to the main CLI class defined in `cli.py`.
 """
 
 import sys
-import fire
+import fire  # type: ignore[import-untyped]
 from loguru import logger
 
 # Import the actual CLI class from the dedicated module

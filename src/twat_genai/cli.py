@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 from typing import get_args, Any, cast, Literal
 
-import fire
+import fire  # type: ignore[import-untyped]
 from loguru import logger
 
 from twat_genai.core.config import ImageInput, ImageResult, ImageSizeWH
@@ -27,9 +27,7 @@ from twat_genai.engines.fal.config import (
 
 # Helper to map upscale tool names to ModelTypes
 UPSCALE_TOOL_MAP = {
-    tool.name.replace("UPSCALER_", "").lower(): tool
-    for tool in ModelTypes
-    if tool.name.startswith("UPSCALER_")
+    tool.name.replace("UPSCALER_", "").lower(): tool for tool in ModelTypes if tool.name.startswith("UPSCALER_")
 }
 
 
@@ -152,9 +150,7 @@ class TwatGenAiCLI:
             return None
 
         try:
-            is_url = isinstance(input_image, str) and input_image.startswith(
-                ("http:", "https:")
-            )
+            is_url = isinstance(input_image, str) and input_image.startswith(("http:", "https:"))
             input_img_obj = ImageInput(
                 url=input_image if is_url else None,
                 path=Path(input_image) if not is_url else None,
@@ -168,9 +164,7 @@ class TwatGenAiCLI:
             # use the input image's basename as the prefix
             if self.filename_prefix is None and input_img_obj.path:
                 self.filename_prefix = input_img_obj.path.stem
-                logger.debug(
-                    f"Using input image basename as filename prefix: {self.filename_prefix}"
-                )
+                logger.debug(f"Using input image basename as filename prefix: {self.filename_prefix}")
 
             return input_img_obj
         except Exception as e:
@@ -193,9 +187,7 @@ class TwatGenAiCLI:
     ) -> list[ImageResult]:
         """Core generation logic shared across commands."""
         # Use input_image_path to determine output directory if not explicitly provided by user
-        output_dir_path = get_output_dir(
-            self.output_dir, output_subdirectory, input_image_path
-        )
+        output_dir_path = get_output_dir(self.output_dir, output_subdirectory, input_image_path)
         output_dir_path.mkdir(parents=True, exist_ok=True)
 
         final_prompts = normalize_prompts(prompts)
@@ -244,12 +236,10 @@ class TwatGenAiCLI:
 
         import asyncio
 
-        results = asyncio.run(
-            self._run_generation(prompts, ModelTypes.TEXT, output_subdirectory=output)
-        )
+        results = asyncio.run(self._run_generation(prompts, ModelTypes.TEXT, output_subdirectory=output))
         self._print_results(results)
 
-    async def image( # Changed to async
+    async def image(  # Changed to async
         self,
         input_image: str,
         prompts: str | list[str] = "",
@@ -279,7 +269,7 @@ class TwatGenAiCLI:
             model_type=ModelTypes.IMAGE,
         )
 
-        results = await self._run_generation( # await here
+        results = await self._run_generation(  # await here
             prompts,
             ModelTypes.IMAGE,
             image_config=i2i_config,
@@ -288,12 +278,12 @@ class TwatGenAiCLI:
         )
         self._print_results(results)
 
-    async def canny( # Changed to async
+    async def canny(  # Changed to async
         self,
         input_image: str,
         prompts: str | list[str] = "",
         output: str | None = None,
-    ) -> None: # Return type is None, but it's an async def
+    ) -> None:  # Return type is None, but it's an async def
         """Generate images using the Canny edge detection version of the input image.
 
         Args:
@@ -316,7 +306,7 @@ class TwatGenAiCLI:
             model_type=ModelTypes.CANNY,
         )
 
-        results = await self._run_generation( # await here
+        results = await self._run_generation(  # await here
             prompts,
             ModelTypes.CANNY,
             image_config=i2i_config,
@@ -325,12 +315,12 @@ class TwatGenAiCLI:
         )
         self._print_results(results)
 
-    async def depth( # Changed to async
+    async def depth(  # Changed to async
         self,
         input_image: str,
         prompts: str | list[str] = "",
         output: str | None = None,
-    ) -> None: # Return type is None, but it's an async def
+    ) -> None:  # Return type is None, but it's an async def
         """Generate images using the depth map of the input image.
 
         Args:
@@ -353,7 +343,7 @@ class TwatGenAiCLI:
             model_type=ModelTypes.DEPTH,
         )
 
-        results = await self._run_generation( # await here
+        results = await self._run_generation(  # await here
             prompts,
             ModelTypes.DEPTH,
             image_config=i2i_config,
@@ -362,7 +352,7 @@ class TwatGenAiCLI:
         )
         self._print_results(results)
 
-    async def upscale( # Changed to async
+    async def upscale(  # Changed to async
         self,
         input_image: str,
         tool: Literal[
@@ -426,7 +416,7 @@ class TwatGenAiCLI:
             raise ValueError(msg)
 
         # Create UpscaleConfig based on the selected tool
-        upscale_kwargs = {}
+        upscale_kwargs: dict[str, Any] = {}
 
         # DRCT params
         if tool == "drct" and scale is not None:
@@ -478,16 +468,16 @@ class TwatGenAiCLI:
 
         upscale_config = UpscaleConfig(input_image=input_img, **upscale_kwargs)
 
-        results = await self._run_generation( # await here
+        results = await self._run_generation(  # await here
             prompts,
-            upscaler, # This is a ModelTypes enum already
+            upscaler,  # This is a ModelTypes enum already
             upscale_config=upscale_config,
             output_subdirectory=output,
             input_image_path=input_img.path,
         )
         self._print_results(results)
 
-    async def outpaint( # Changed to async
+    async def outpaint(  # Changed to async
         self,
         input_image: str,
         prompts: str | list[str],
@@ -531,12 +521,10 @@ class TwatGenAiCLI:
 
         # Determine model type from tool parameter
         outpaint_tool_literal = cast(Literal["bria", "flux"], tool.lower())
-        model_type = (
-            ModelTypes.OUTPAINT_BRIA if tool == "bria" else ModelTypes.OUTPAINT_FLUX
-        )
+        model_type = ModelTypes.OUTPAINT_BRIA if tool == "bria" else ModelTypes.OUTPAINT_FLUX
 
         # Prepare kwargs for OutpaintConfig
-        outpaint_kwargs = {
+        outpaint_kwargs: dict[str, Any] = {
             "input_image": input_img,
             "prompt": prompts if isinstance(prompts, str) else "; ".join(prompts),
             "target_width": target_width,
@@ -553,7 +541,7 @@ class TwatGenAiCLI:
             if enable_safety_checker is not None:
                 outpaint_kwargs["enable_safety_checker"] = enable_safety_checker
         else:
-            valid_tools = '"bria" or "flux"'
+            valid_tools = '"bria" or "flux"'  # type: ignore[unreachable]
             msg = f"Invalid outpaint tool: {tool}. Valid options: {valid_tools}"
             raise ValueError(msg)
 
@@ -566,14 +554,12 @@ class TwatGenAiCLI:
         # Create OutpaintConfig
         outpaint_config = OutpaintConfig(**outpaint_kwargs)
 
-        results = asyncio.run(
-            self._run_generation(
-                prompts,
-                model_type,
-                outpaint_config=outpaint_config,
-                output_subdirectory=output,
-                input_image_path=input_img.path,
-            )
+        results = await self._run_generation(
+            prompts,
+            model_type,
+            outpaint_config=outpaint_config,
+            output_subdirectory=output,
+            input_image_path=input_img.path,
         )
         self._print_results(results)
 

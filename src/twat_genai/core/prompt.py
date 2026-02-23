@@ -30,12 +30,8 @@ PARAM_PREFIX = "--"
 class ImagePrompt(BaseModel):
     """An image URL used as part of a prompt."""
 
-    url: AnyHttpUrl = Field(
-        ..., description="Direct image URL ending with allowed extension"
-    )
-    weight: float = Field(
-        default=1.0, description="Image weight/influence (--iw parameter)"
-    )
+    url: AnyHttpUrl = Field(..., description="Direct image URL ending with allowed extension")
+    weight: float = Field(default=1.0, description="Image weight/influence (--iw parameter)")
 
     @property
     def is_valid(self) -> bool:
@@ -60,13 +56,9 @@ class PromptPart(BaseModel):
 class MidjourneyPrompt(BaseModel):
     """Complete parsed Midjourney prompt structure."""
 
-    image_prompts: list[ImagePrompt] = Field(
-        default_factory=list, description="Image URLs used in prompt"
-    )
+    image_prompts: list[ImagePrompt] = Field(default_factory=list, description="Image URLs used in prompt")
     text_parts: list[PromptPart] = Field(..., description="Text portions of the prompt")
-    parameters: list[PromptParameter] = Field(
-        default_factory=list, description="Prompt parameters"
-    )
+    parameters: list[PromptParameter] = Field(default_factory=list, description="Prompt parameters")
     raw_prompt: str = Field(..., description="Original unparsed prompt")
 
     def to_string(self) -> str:
@@ -100,8 +92,8 @@ class MidjourneyPrompt(BaseModel):
 
 def split_top_level(s: str, delimiter: str = ",") -> list[str]:
     """Split string by delimiter only at top level (not inside braces)."""
-    parts = []
-    current = []
+    parts: list[str] = []
+    current: list[str] = []
     depth = 0
 
     for char in s:
@@ -152,8 +144,8 @@ def expand_permutations(prompt: str) -> list[str]:
     suffix = prompt[end_idx + 1 :]
 
     # Split options and handle escaped commas
-    parts = []
-    current = []
+    parts: list[str] = []
+    current: list[str] = []
     escaped = False
     for char in options:
         if char == "\\":
@@ -241,11 +233,7 @@ def parse_prompt(prompt: str) -> MidjourneyPrompt:
         if any(part.lower().endswith(ext) for ext in ALLOWED_IMAGE_EXTENSIONS):
             try:
                 # Ensure URL starts with http/https and parse using Pydantic
-                url = (
-                    part
-                    if part.startswith(("http://", "https://"))
-                    else f"https://{part}"
-                )
+                url = part if part.startswith(("http://", "https://")) else f"https://{part}"
                 parsed_url = parse_obj_as(AnyHttpUrl, url)
                 image_prompts.append(ImagePrompt(url=parsed_url))
             except Exception as e:
@@ -267,9 +255,7 @@ def parse_prompt(prompt: str) -> MidjourneyPrompt:
 
 def normalize_prompts(prompts: str | list[str]) -> list[str]:
     """Normalize and expand a prompt or list of prompts."""
-    raw_prompts = (
-        split_top_level(prompts, delimiter=";") if isinstance(prompts, str) else prompts
-    )
+    raw_prompts = split_top_level(prompts, delimiter=";") if isinstance(prompts, str) else prompts
 
     final_prompts = []
     for raw in raw_prompts:

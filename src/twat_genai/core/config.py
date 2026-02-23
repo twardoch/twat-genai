@@ -51,11 +51,9 @@ class ImageInput(BaseModel):
     @property
     def is_valid(self) -> bool:
         """Check if exactly one input type is provided."""
-        return (
-            sum(1 for x in (self.url, self.path, self.pil_image) if x is not None) == 1
-        )
+        return sum(1 for x in (self.url, self.path, self.pil_image) if x is not None) == 1
 
-    async def to_url(self, client=None) -> str:
+    async def to_url(self, client: Any = None) -> str:
         """Convert the input to a URL format.
 
         If the input is already a URL, return it directly.

@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -40,7 +40,7 @@ class ImageFormats(str, Enum):
 
 
 # Add ImageSizeWH class for compatibility with code that imports it from here
-from twat_genai.core.config import ImageSizeWH # Import from core.config
+from twat_genai.core.config import ImageSizeWH  # Import from core.config
 
 
 async def save_image(
@@ -50,7 +50,7 @@ async def save_image(
     quality: int = 95,
 ) -> None:
     """Save an image to disk."""
-    save_kwargs = {"quality": quality}
+    save_kwargs: dict[str, Any] = {"quality": quality}
     format_str: str | None = None
     if img_format:
         format_str = img_format.value
@@ -59,15 +59,11 @@ async def save_image(
         pass
 
     try:
-        logger.debug(
-            f"Saving image to {path} with format '{format_str}' and args: {save_kwargs}"
-        )
+        logger.debug(f"Saving image to {path} with format '{format_str}' and args: {save_kwargs}")
         image.save(path, **save_kwargs)
         logger.info(f"Saved image to {path}")
     except KeyError:
-        logger.warning(
-            f"Unknown format enum {img_format} ('{format_str}'), saving without explicit format."
-        )
+        logger.warning(f"Unknown format enum {img_format} ('{format_str}'), saving without explicit format.")
         save_kwargs.pop("format", None)
         try:
             image.save(path, format=None, quality=quality)

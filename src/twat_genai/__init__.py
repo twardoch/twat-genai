@@ -1,6 +1,13 @@
-"""Main package for twat-genai."""
+"""twat-genai: Generative AI toolkit powered by fal.ai."""
+
+from __future__ import annotations
 
 from importlib.metadata import PackageNotFoundError, version
+
+try:
+    __version__ = version("twat-genai")
+except PackageNotFoundError:
+    __version__ = "0.0.0-dev"
 
 from twat_genai.cli import TwatGenAiCLI
 from twat_genai.core.config import ImageInput, ImageResult, ImageSizeWH
@@ -9,16 +16,18 @@ from twat_genai.engines.base import EngineConfig, ImageGenerationEngine
 from twat_genai.engines.fal import FALEngine
 from twat_genai.engines.fal.config import (
     ImageToImageConfig,
-    ModelTypes,  # This now also includes upscale/outpaint model types
+    ModelTypes,
     OutpaintConfig,
     UpscaleConfig,
 )
 
-try:
-    __version__ = version("twat-genai")
-except PackageNotFoundError:
-    # package is not installed
-    __version__ = "0.0.0"
+
+def main() -> None:
+    """CLI entry point for twat-genai."""
+    import fire  # type: ignore[import-untyped]
+
+    fire.Fire(TwatGenAiCLI)
+
 
 __all__ = [
     "EngineConfig",
@@ -27,12 +36,13 @@ __all__ = [
     "ImageGenerationEngine",
     "ImageInput",
     "ImageResult",
-    "ImageSizeWH",  # Defined in core.config
-    "ImageSizes",   # Defined in core.image
+    "ImageSizeWH",
+    "ImageSizes",
     "ImageToImageConfig",
-    "ModelTypes",   # Defined in engines.fal.config
+    "ModelTypes",
     "OutpaintConfig",
     "TwatGenAiCLI",
     "UpscaleConfig",
     "__version__",
+    "main",
 ]

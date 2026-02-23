@@ -21,12 +21,11 @@ from loguru import logger
 
 # Try importing PathManager, handle optional dependency
 try:
-    from twat_os.paths import PathManager
+    from twat_os.paths import PathManager  # type: ignore[import-not-found]
 except ImportError:
     PathManager = None
     logger.warning(
-        "'twat' package not fully available. PathManager features disabled."
-        " LoRA library resolution will use defaults."
+        "'twat' package not fully available. PathManager features disabled. LoRA library resolution will use defaults."
     )
 
 
@@ -55,9 +54,7 @@ def get_lora_lib() -> LoraLib:
             if lib_path.exists():
                 return LoraLib.model_validate_json(lib_path.read_text())
         except (AttributeError, Exception) as e:
-            logger.warning(
-                f"Error using PathManager for LoRA library: {e}. Using bundled library."
-            )
+            logger.warning(f"Error using PathManager for LoRA library: {e}. Using bundled library.")
 
     # Fall back to bundled library
     bundled_path = Path(__file__).parent.parent.parent / "__main___loras.json"
@@ -89,10 +86,8 @@ def parse_lora_phrase(phrase: str) -> LoraSpecEntry | CombinedLoraSpecEntry:
     if phrase in LORA_LIB.root:
         entries = []
         for record in LORA_LIB.root[phrase].root:
-            entries.append(
-                LoraSpecEntry(path=record.url, scale=record.scale, prompt=phrase + ",")
-            )
-        return CombinedLoraSpecEntry(entries=entries, factory_key=phrase)
+            entries.append(LoraSpecEntry(path=record.url, scale=record.scale, prompt=phrase + ","))
+        return CombinedLoraSpecEntry(entries=list(entries), factory_key=phrase)
 
     if ":" in phrase:
         identifier, scale_str = phrase.split(":", 1)
@@ -133,10 +128,8 @@ def normalize_lora_spec(
         case list() | tuple() as items:
             for item in items:
                 match item:
-                    case dict(path=path, scale=scale, prompt=prompt):
-                        normalized.append(
-                            LoraSpecEntry(path=path, scale=float(scale), prompt=prompt)
-                        )
+                    case dict(path=path, scale=scale, prompt=prompt):  # type: ignore[misc]
+                        normalized.append(LoraSpecEntry(path=path, scale=float(scale), prompt=prompt))
                     case dict() as d:
                         if "path" not in d:
                             msg = "LoRA spec dictionary must have a 'path'."
@@ -151,11 +144,7 @@ def normalize_lora_spec(
                     case str() as phrase:
                         normalized.append(parse_lora_phrase(phrase))
                     case list() as sublist:
-                        combined = [
-                            parse_lora_phrase(sub)
-                            for sub in sublist
-                            if isinstance(sub, str)
-                        ]
+                        combined = [parse_lora_phrase(sub) for sub in sublist if isinstance(sub, str)]
                         normalized.append(CombinedLoraSpecEntry(entries=combined))
                     case _:
                         msg = f"Unsupported LoRA spec item type: {type(item)}"
@@ -166,15 +155,13 @@ def normalize_lora_spec(
             phrases = [phrase.strip() for phrase in s.split(";") if phrase.strip()]
             return [parse_lora_phrase(phrase) for phrase in phrases]
         case _:
-            msg = f"Unsupported LoRA spec type: {type(spec)}"
+            msg = f"Unsupported LoRA spec type: {type(spec)}"  # type: ignore[unreachable]
             raise ValueError(msg)
 
     return normalized
 
 
-async def build_lora_arguments(
-    lora_spec: str | list | tuple | None, prompt: str
-) -> tuple[list[dict[str, Any]], str]:
+async def build_lora_arguments(lora_spec: str | list | tuple | None, prompt: str) -> tuple[list[dict[str, Any]], str]:
     """
     Build the list of inference LoRA dictionaries and a final prompt.
 
@@ -203,7 +190,5 @@ async def build_lora_arguments(
 
     logger.debug(f"Using LoRA configuration: {lora_list}")
 
-    final_prompt = (
-        f"{', '.join(prompt_prefixes)}, {prompt}".strip() if prompt_prefixes else prompt
-    )
+    final_prompt = f"{', '.join(prompt_prefixes)}, {prompt}".strip() if prompt_prefixes else prompt
     return lora_list, final_prompt

@@ -70,9 +70,7 @@ class UpscaleConfig(BaseModel):
 
     # Fooocus
     fooocus_styles: list[str] | None = None
-    fooocus_performance: (
-        Literal["Speed", "Quality", "Extreme Speed", "Lightning"] | None
-    ) = None
+    fooocus_performance: Literal["Speed", "Quality", "Extreme Speed", "Lightning"] | None = None
     fooocus_guidance_scale: float | None = None
     fooocus_sharpness: float | None = None
     fooocus_uov_method: (
@@ -123,17 +121,13 @@ class OutpaintConfig(BaseModel):
     target_width: int
     target_height: int
     num_images: int = 1
-    outpaint_tool: Literal["bria", "flux"] = (
-        "bria"  # Default to bria for backward compatibility
-    )
+    outpaint_tool: Literal["bria", "flux"] = "bria"  # Default to bria for backward compatibility
     # Extra parameters for flux outpainting
     guidance_scale: float | None = None  # Flux-specific
     num_inference_steps: int | None = None  # Flux-specific
     negative_prompt: str | None = None  # Flux-specific
     enable_safety_checker: bool | None = None  # Flux-specific
-    border_thickness_factor: float = (
-        0.05  # Border thickness for GenFill post-processing
-    )
+    border_thickness_factor: float = 0.05  # Border thickness for GenFill post-processing
 
     # Note: original_image_size and original_image_location are typically calculated
     # just before the API call based on the input_image dimensions and target size.
