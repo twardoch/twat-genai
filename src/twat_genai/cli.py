@@ -16,14 +16,18 @@ from loguru import logger
 from twat_genai.core.config import ImageInput, ImageResult, ImageSizeWH
 from twat_genai.core.image import ImageSizes
 from twat_genai.core.prompt import normalize_prompts
+from twat_genai.engines.chutes import ChutesClient
 from twat_genai.engines.base import EngineConfig
 from twat_genai.engines.fal import FALEngine
+from twat_genai.engines.gemini import GeminiImageClient
+from twat_genai.engines.openai_image import OpenAIImageClient
 from twat_genai.engines.fal.config import (
     ImageToImageConfig,
     ModelTypes,
     UpscaleConfig,
     OutpaintConfig,
 )
+from twat_genai.models import ImageEditRequest, ImageGenerationRequest, MediaFile, MediaKind, VideoGenerationRequest
 
 # Helper to map upscale tool names to ModelTypes
 UPSCALE_TOOL_MAP = {
@@ -238,6 +242,83 @@ class TwatGenAiCLI:
 
         results = asyncio.run(self._run_generation(prompts, ModelTypes.TEXT, output_subdirectory=output))
         self._print_results(results)
+
+    def openai_image(
+        self,
+        prompt: str,
+        model: str = "gpt",
+        output: str | None = None,
+        n: int = 1,
+        width: int | None = None,
+        height: int | None = None,
+        output_format: str | None = None,
+    ) -> None:
+        """Generate images with an OpenAI-compatible image endpoint."""
+
+        request = ImageGenerationRequest(
+            prompt=prompt,
+            model=model,
+            n=n,
+            width=width,
+            height=height,
+            output_format=cast(Any, output_format),
+        )
+        client = OpenAIImageClient()
+        response = client.generate(request)
+        if output:
+            paths = client.save_response_files(response, Path(output).parent, Path(output).stem)
+            print({"ok": response.ok, "saved": [str(path) for path in paths], "raw": response.raw})
+            return
+        print(response.model_dump(mode="json"))
+
+    def gemini_transform(
+        self,
+        input_image: str,
+        reference_image: str,
+        prompt: str,
+        model: str = "flash31",
+    ) -> None:
+        """Transform an image with Gemini/Nano Banana image models."""
+
+        request = ImageEditRequest(
+            prompt=prompt,
+            model=model,
+            input_images=[
+                MediaFile(kind=MediaKind.IMAGE, path=Path(input_image)),
+                MediaFile(kind=MediaKind.IMAGE, path=Path(reference_image)),
+            ],
+        )
+        response = GeminiImageClient().transform_image(request)
+        print(response.model_dump(mode="json"))
+
+    def chutes_image(self, prompt: str, model: str | None = None, width: int | None = None, height: int | None = None) -> None:
+        """Generate an image through the general Chutes image endpoint."""
+
+        request = ImageGenerationRequest(prompt=prompt, model=model, width=width, height=height)
+        response = ChutesClient().generate_image(request)
+        print(response.model_dump(mode="json"))
+
+    def chutes_video(
+        self,
+        prompt: str,
+        first_frame: str | None = None,
+        last_frame: str | None = None,
+        resolution: str | None = None,
+        fps: int | None = None,
+        num_frames: int | None = None,
+    ) -> None:
+        """Generate video through Chutes SkyReels or WAN endpoints."""
+
+        request = VideoGenerationRequest(
+            prompt=prompt,
+            first_frame=MediaFile(kind=MediaKind.IMAGE, path=Path(first_frame)) if first_frame else None,
+            last_frame=MediaFile(kind=MediaKind.IMAGE, path=Path(last_frame)) if last_frame else None,
+            resolution=resolution,
+            fps=fps,
+            num_frames=num_frames,
+        )
+        response = ChutesClient(timeout=7200.0).generate_video(request)
+        print(response.model_dump(mode="json"))
 
     async def image(  # Changed to async
         self,

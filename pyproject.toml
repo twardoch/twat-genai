@@ -75,6 +75,12 @@ Documentation = "https://github.com/twardoch/twat-genai#readme"
 Issues = "https://github.com/twardoch/twat-genai/issues"
 Source = "https://github.com/twardoch/twat-genai"
 
+# Command-Line Scripts
+# ---------------------
+# Entry points for command-line executables installed with the package
+[project.scripts]
+twat-genai = "twat_genai:main"
+
 # Twat Plugin Registration
 # -----------------------
 # Registers this package as a plugin for the twat ecosystem

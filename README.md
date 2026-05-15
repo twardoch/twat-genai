@@ -1,13 +1,13 @@
 # `twat-genai`: Generative AI Toolkit
 
-**`twat-genai`** is a powerful Python package that provides a unified command-line interface (CLI) and Python API for a variety of generative AI image tasks. It simplifies interaction with different AI models and services, currently focusing on the [FAL (fal.ai)](https://fal.ai/) platform. This tool is part of the [TWAT (Twardoch Utility Tools)](https://pypi.org/project/twat/) collection.
+**`twat-genai`** is the shared generative-media provider layer for the twat ecosystem. It preserves the existing [FAL (fal.ai)](https://fal.ai/) image API and now also exposes thin, testable clients for Chutes media endpoints, OpenAI-compatible image generation, and Gemini/Nano Banana image transforms.
 
 Whether you're a developer, artist, or researcher, `twat-genai` empowers you to programmatically generate and manipulate images, automate creative workflows, and experiment with cutting-edge AI models.
 
 ## Key Features
 
 *   **Unified Interface:** Access Text-to-Image, Image-to-Image, ControlNet-like operations (Canny edges, Depth maps), Image Upscaling, and Image Outpainting through a consistent CLI and API.
-*   **FAL.ai Integration:** Leverages the [fal.ai](https://fal.ai/) platform for model hosting and execution.
+*   **Provider Matrix:** FAL for existing image workflows, Chutes for image/video/rembg/HiDream-style operations, OpenAI-compatible image endpoints for `imgquotio.py` behavior, and Gemini/Nano Banana for `imgnanobanatrans.py` behavior.
 *   **Flexible Input:** Use text prompts with Midjourney-style syntax (permutations, multi-prompts), and provide input images via URLs, local file paths, or PIL Image objects.
 *   **LoRA Support:** Easily apply LoRA (Low-Rank Adaptation) models from a predefined library or by specifying URLs.
 *   **Comprehensive Configuration:** Fine-tune generation parameters using Pydantic-based configuration objects.
@@ -57,20 +57,36 @@ Whether you're a developer, artist, or researcher, `twat-genai` empowers you to 
     uv pip install -e ".[all]"
     ```
 
-3.  **Set FAL API Key:**
-    You need an API key from [fal.ai](https://fal.ai/).
+3.  **Set provider API keys as needed:**
     *   Set it as an environment variable:
         ```bash
         export FAL_KEY="your-fal-api-key"
+        export CHUTES_API_KEY="your-chutes-api-key"
+        export OPENAI_API_KEY="your-openai-key"
+        export GEMINI_API_KEY="your-gemini-key"
         ```
     *   Or, create a `.env` file in the project root (`twat-genai/`) with the following content:
         ```
         FAL_KEY="your-fal-api-key"
+        CHUTES_API_KEY="your-chutes-api-key"
+        OPENAI_API_KEY="your-openai-key"
+        GEMINI_API_KEY="your-gemini-key"
         ```
 
 ## Basic Usage (CLI)
 
 The main command is `twat-genai`. You can explore commands and options with `twat-genai --help`.
+
+Provider-focused commands are available for reusable reference-script behavior:
+
+```bash
+twat-genai chutes_image "a quiet forest" --model FLUX.1-dev
+twat-genai chutes_video "waves rolling onto shore" --resolution 540P
+twat-genai openai_image "a quote poster" --model gpt --width 1024 --height 1024
+twat-genai gemini_transform subject.png lighting.png "match lighting while preserving identity"
+```
+
+`reference/bin-img-vid/imgquotio.py` is represented by `OpenAIImageClient` and `openai_image`. `reference/bin-img-vid/imgnanobanatrans.py` is represented by `GeminiImageClient` and `gemini_transform`. Chutes reference clients from `reference/chutes_image/` are represented by `ChutesClient`; domain packages should call these APIs instead of copying provider code.
 
 ### Common Arguments
 
