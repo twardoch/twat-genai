@@ -846,7 +846,7 @@ class FalApiClient:
             elif "image" in result:
                 if isinstance(result["image"], list):
                     extracted_list = [_create_info_dict(img) for img in result["image"]]
-                elif isinstance(result["image"], dict) or isinstance(result["image"], str):
+                elif isinstance(result["image"], dict | str):
                     # Single image dictionary or URL string
                     extracted_list = [_create_info_dict(result["image"])]
             elif "url" in result and isinstance(result["url"], str):

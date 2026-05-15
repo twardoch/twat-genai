@@ -291,7 +291,9 @@ class TwatGenAiCLI:
         response = GeminiImageClient().transform_image(request)
         print(response.model_dump(mode="json"))
 
-    def chutes_image(self, prompt: str, model: str | None = None, width: int | None = None, height: int | None = None) -> None:
+    def chutes_image(
+        self, prompt: str, model: str | None = None, width: int | None = None, height: int | None = None
+    ) -> None:
         """Generate an image through the general Chutes image endpoint."""
 
         request = ImageGenerationRequest(prompt=prompt, model=model, width=width, height=height)

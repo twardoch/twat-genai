@@ -344,4 +344,3 @@ When you write prose (like documentation or marketing or even your own commentar
 - Make every word count. 
 
 ---
-

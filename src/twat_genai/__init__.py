@@ -37,13 +37,8 @@ Quick start::
 """
 
 from __future__ import annotations
+from .__version__ import __version__
 
-from importlib.metadata import PackageNotFoundError, version
-
-try:
-    __version__ = version("twat-genai")
-except PackageNotFoundError:
-    __version__ = "0.0.0-dev"
 
 from twat_genai.cli import TwatGenAiCLI
 from twat_genai.core.config import ImageInput, ImageResult, ImageSizeWH
