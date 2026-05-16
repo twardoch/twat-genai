@@ -79,7 +79,12 @@ Source = "https://github.com/twardoch/twat-genai"
 # ---------------------
 # Entry points for command-line executables installed with the package
 [project.scripts]
-twat-genai = "twat_genai:main"
+twat-genai                  = "twat_genai.__main__:main"
+twat-genai-image            = "twat_genai.__main__:cmd_image"
+twat-genai-video            = "twat_genai.__main__:cmd_video"
+twat-genai-list-providers   = "twat_genai.__main__:cmd_list_providers"
+twat-genai-list-models      = "twat_genai.__main__:cmd_list_models"
+twat-genai-version          = "twat_genai.__main__:cmd_version"
 
 # Twat Plugin Registration
 # -----------------------
@@ -193,6 +198,8 @@ ignore = [
     "PLR0913",
     "PLR0915",
     "PLR2004",
+    "PLC0415",
+    "PLW1510",
     "S311",
     "S603",
     "S607",
