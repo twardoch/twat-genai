@@ -167,8 +167,8 @@ from twat_genai import (
     FALEngine,
     ModelTypes,
     EngineConfig,
-    ImageInput, # Base ImageInput
-    FALImageInput, # For FAL-specific interactions if needed, usually handled by FALEngine
+    ImageInput,
+    ImageSizes,
     ImageToImageConfig,
     UpscaleConfig,
     OutpaintConfig,
@@ -183,7 +183,7 @@ async def main():
     async with FALEngine(output_dir=output_dir) as engine:
         # --- 1. Text-to-Image ---
         print("Running Text-to-Image...")
-        base_config_tti = EngineConfig(image_size="HD", num_inference_steps=30)
+        base_config_tti = EngineConfig(image_size=ImageSizes.HD, num_inference_steps=30)
         result_tti = await engine.generate(
             prompt="A stunning fantasy castle on a floating island, hyperrealistic",
             config=base_config_tti,

@@ -20,25 +20,19 @@ from twat_genai.engines.fal.config import ModelTypes  # For resize test
 @pytest.mark.asyncio
 async def test_download_image_to_temp_success(mocker):
     "Test successful download to a temporary file."
-    # Mock httpx response
     mock_response = AsyncMock()
-    mock_response.content = b"fake image data"  # This is fine for AsyncMock if not directly awaited
-    mock_response.headers = {"content-type": "image/jpeg"}  # This needs to be a direct dict
-    mock_response.raise_for_status = MagicMock()  # This is fine
-
-    # Mock httpx client's get method
-    async def mock_get(*args, **kwargs):
-        return mock_response
+    mock_response.content = b"fake image data"
+    mock_response.headers = {"content-type": "image/jpeg"}
+    mock_response.raise_for_status = MagicMock()
 
     mock_client_instance = AsyncMock()
-    mock_client_instance.get = mock_get
+    mock_client_instance.get = AsyncMock(return_value=mock_response)
 
-    mock_async_client_context_manager = AsyncMock()
-    mock_async_client_context_manager.__aenter__.return_value = mock_client_instance  # mock client instance
+    mock_context_manager = AsyncMock()
+    mock_context_manager.__aenter__.return_value = mock_client_instance
 
-    mocker.patch("httpx.AsyncClient", return_value=mock_async_client_context_manager)
+    mock_async_client = mocker.patch("httpx.AsyncClient", return_value=mock_context_manager)
 
-    # Mock tempfile
     mock_named_temp_file = mocker.patch("tempfile.NamedTemporaryFile")
     mock_file_handle = MagicMock()
     mock_file_handle.name = "/tmp/fake_temp_file.jpg"
@@ -47,7 +41,7 @@ async def test_download_image_to_temp_success(mocker):
     temp_path = await download_image_to_temp("http://fake.url/img.jpg")
 
     mock_async_client.assert_called_once()
-    mock_client.get.assert_called_once_with("http://fake.url/img.jpg", follow_redirects=True)
+    mock_client_instance.get.assert_called_once_with("http://fake.url/img.jpg", follow_redirects=True)
     mock_named_temp_file.assert_called_once_with(suffix=".jpg", delete=False)
     mock_file_handle.write.assert_called_once_with(b"fake image data")
     assert temp_path == "/tmp/fake_temp_file.jpg"
@@ -56,17 +50,17 @@ async def test_download_image_to_temp_success(mocker):
 @pytest.mark.asyncio
 async def test_download_image_to_temp_http_error(mocker):
     "Test HTTP error during download to temp."
-    # Mock httpx response to raise error
-    mock_response = AsyncMock()
-    mock_response.raise_for_status.side_effect = mocker.patch(
-        "httpx.RequestError", side_effect=ValueError("Fake HTTP Error")
-    )()
+    import httpx as _httpx
 
-    mock_client = AsyncMock()
-    mock_client.get.return_value = mock_response
-    mocker.patch("httpx.AsyncClient", return_value=mock_client)
+    mock_client_instance = AsyncMock()
+    mock_client_instance.get.side_effect = _httpx.RequestError("Fake HTTP Error")
 
-    with pytest.raises(RuntimeError, match="Failed to download image"):  # Match the wrapped error
+    mock_context_manager = AsyncMock()
+    mock_context_manager.__aenter__.return_value = mock_client_instance
+
+    mocker.patch("httpx.AsyncClient", return_value=mock_context_manager)
+
+    with pytest.raises(RuntimeError, match="Failed to download image"):
         await download_image_to_temp("http://fake.url/img.jpg")
 
 
@@ -78,29 +72,22 @@ async def test_download_image_success(mocker, tmp_path):
     "Test successful download to a specific path."
     output_path = tmp_path / "output.png"
 
-    # Mock httpx response
     mock_response = AsyncMock()
-    mock_response.content = b"fake png data"  # direct assignment for read by write_bytes
-    mock_response.headers = {"content-type": "image/png"}  # direct dict
+    mock_response.content = b"fake png data"
+    mock_response.headers = {"content-type": "image/png"}
     mock_response.raise_for_status = MagicMock()
 
-    # Mock httpx client's get method
-    async def mock_get(*args, **kwargs):
-        return mock_response
-
     mock_client_instance = AsyncMock()
-    mock_client_instance.get = mock_get
+    mock_client_instance.get = AsyncMock(return_value=mock_response)
 
-    mock_async_client_context_manager = AsyncMock()
-    mock_async_client_context_manager.__aenter__.return_value = mock_client_instance
+    mock_context_manager = AsyncMock()
+    mock_context_manager.__aenter__.return_value = mock_client_instance
 
-    mocker.patch("httpx.AsyncClient", return_value=mock_async_client_context_manager)
+    mocker.patch("httpx.AsyncClient", return_value=mock_context_manager)
 
     await download_image("http://fake.url/img.png", output_path)
 
-    mock_client_instance.get.assert_called_once_with(  # Check call on the instance
-        "http://fake.url/img.png", follow_redirects=True
-    )
+    mock_client_instance.get.assert_called_once_with("http://fake.url/img.png", follow_redirects=True)
     assert output_path.exists()
     assert output_path.read_bytes() == b"fake png data"
 

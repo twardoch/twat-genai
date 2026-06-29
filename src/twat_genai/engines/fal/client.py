@@ -333,8 +333,8 @@ class FalApiClient:
                 job_params=job_params,
             )
         except Exception as e:
-            logger.error("Outpaint process failed: {}", repr(e), exc_info=True)
-            msg = f"Outpaint process failed: {e!r}"
+            logger.error("Outpaint process failed: {}", e, exc_info=True)
+            msg = f"Outpaint process failed: {e}"
             raise RuntimeError(msg) from e
 
     async def process_depth(
@@ -464,20 +464,22 @@ class FalApiClient:
             if v is not None:
                 fal_args[k] = v
 
-        # Add LoRA parameters if specified
-        if lora_spec:
-            from twat_genai.engines.fal.lora import build_lora_arguments
+        logger.debug(f"FAL arguments before LoRA: {fal_args}")
 
-            # build_lora_arguments is async and expects prompt
-            lora_list, final_prompt = await build_lora_arguments(lora_spec, prompt)
-            if lora_list:
-                fal_args["loras"] = lora_list  # FAL expects "loras" key
-            fal_args["prompt"] = final_prompt  # Update prompt with LoRA triggers
-
-        logger.debug(f"Final FAL arguments: {fal_args}")
-
-        # Submit job and get result
+        # Submit job and get result; LoRA build is inside the try so any error
+        # gets wrapped in a consistent RuntimeError with the model name.
         try:
+            # Add LoRA parameters if specified
+            if lora_spec:
+                from twat_genai.engines.fal.lora import build_lora_arguments
+
+                # build_lora_arguments is async and expects prompt
+                lora_list, final_prompt = await build_lora_arguments(lora_spec, prompt)
+                if lora_list:
+                    fal_args["loras"] = lora_list  # FAL expects "loras" key
+                fal_args["prompt"] = final_prompt  # Update prompt with LoRA triggers
+
+            logger.debug(f"Final FAL arguments: {fal_args}")
             request_id = await _submit_fal_job(endpoint, fal_args)
 
             # Prepare job_params for metadata logging

@@ -40,9 +40,13 @@ def mock_fal_engine(mocker: Mock) -> MagicMock:
 # --- Test Cases ---
 
 
-@pytest.mark.asyncio
-async def test_cli_text_basic(mock_fal_engine: MagicMock) -> None:
-    """Test basic text-to-image call."""
+def test_cli_text_basic(mock_fal_engine: MagicMock) -> None:
+    """Test basic text-to-image call.
+
+    text() is a synchronous method that calls asyncio.run() internally, so this
+    test must also be synchronous — calling asyncio.run() from inside an already-
+    running event loop (as pytest-asyncio creates) raises RuntimeError.
+    """
     prompts = "a test prompt"
     output_dir = "test_output"
 
@@ -51,7 +55,7 @@ async def test_cli_text_basic(mock_fal_engine: MagicMock) -> None:
     cli_instance.text(prompts=prompts)
 
     # Assert FALEngine was initialized and called
-    mock_fal_engine.assert_called_once_with(Path(output_dir).resolve())  # FALEngine now resolves path
+    mock_fal_engine.assert_called_once_with(Path(output_dir).resolve())
     mock_fal_engine.return_value.__aenter__.assert_awaited_once()
 
     # Check the arguments passed to engine.generate
@@ -75,12 +79,11 @@ async def test_cli_text_basic(mock_fal_engine: MagicMock) -> None:
     assert engine_config.num_inference_steps == 28
     assert engine_config.image_size == ImageSizes.SQ
 
-    mock_fal_engine.__aexit__.assert_awaited_once()
+    mock_fal_engine.return_value.__aexit__.assert_awaited_once()
 
 
-@pytest.mark.asyncio
-async def test_cli_text_with_options(mock_fal_engine: MagicMock) -> None:
-    """Test text-to-image call with various options."""
+def test_cli_text_with_options(mock_fal_engine: MagicMock) -> None:
+    """Test text-to-image call with various options using the class-based CLI."""
     prompts = ["prompt 1", "prompt 2"]
     output_dir = Path("custom_dir")
     image_size = "1024,768"
@@ -89,25 +92,24 @@ async def test_cli_text_with_options(mock_fal_engine: MagicMock) -> None:
     lora = "style1:0.8"
     suffix = "_abc"
     prefix = "xyz_"
-    neg = "ugly"
 
-    cli_module(
-        prompts=prompts,
+    cli_instance = TwatGenAiCLI(
         output_dir=output_dir,
-        model="text",
         image_size=image_size,
         guidance_scale=gs,
         num_inference_steps=steps,
         lora=lora,
         filename_suffix=suffix,
         filename_prefix=prefix,
-        negative_prompt=neg,  # Note: neg prompt goes into image_config for img models, ignored here?
-        verbose=True,  # Test verbose flag
     )
+    cli_instance.text(prompts=prompts)
+
+    # Assert FALEngine class was instantiated once
+    mock_fal_engine.assert_called_once()
 
     # Assert generate called twice (once per prompt)
     generate_mock = mock_fal_engine.return_value.generate
-    assert generate_mock.await_count == 2
+    assert generate_mock.await_count == 2, f"Expected 2 generate calls, got {generate_mock.await_count}"
 
     # Check the arguments of the first call
     call_args, call_kwargs = generate_mock.await_args_list[0]
@@ -130,9 +132,7 @@ async def test_cli_text_with_options(mock_fal_engine: MagicMock) -> None:
     call_args_2, _ = generate_mock.await_args_list[1]
     assert call_args_2[0] == prompts[1]
 
-    # FALEngine is instantiated once for the CLI instance, context manager entered once per call to _run_generation
-    # Since _run_generation is called once (handling multiple prompts internally), __aenter__ and __aexit__ called once.
-    mock_fal_engine.assert_called_once()  # Class instantiation
+    # Context manager entered and exited once (one _run_generation call handles all prompts)
     mock_fal_engine.return_value.__aenter__.assert_awaited_once()
     mock_fal_engine.return_value.__aexit__.assert_awaited_once()
 

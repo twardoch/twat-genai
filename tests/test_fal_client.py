@@ -574,33 +574,25 @@ async def test_process_i2i_success(
         filename_prefix="test_i2i",
         **kwargs,
     )
-    mock_build_lora_arguments.assert_called_once_with(lora_spec, prompt)
+    # lora_spec=None: build_lora_arguments is skipped by _process_generic
+    mock_build_lora_arguments.assert_not_called()
+    # image_size="landscape_hd" is a plain string — _process_generic only converts
+    # ImageSizeWH / ImageSizes instances, so no width/height is added to fal_args.
     expected_fal_args = {
-        "loras": [],
         "prompt": prompt,
         "image_url": image_url,
         "strength": 0.8,
         "negative_prompt": "bad quality",
-        "num_images": 1,
-        "output_format": "jpeg",
-        "enable_safety_checker": False,  # "image_size": "landscape_hd", # This gets converted
-        "width": 1024,
-        "height": 768,  # from "landscape_hd"
         "guidance_scale": 5.0,
         "num_inference_steps": 25,
     }
-    # expected_fal_args.pop("image_size", None) # No longer needed as it's not added to fal_args if preset
     mock_submit_job.assert_called_once_with(ModelTypes.IMAGE.value, expected_fal_args)
+    # kwargs are popped before job_params is built, so they don't appear there.
     expected_job_params = {
         "model": ModelTypes.IMAGE.value,
         "prompt": prompt,
-        "lora_spec": lora_spec,
         "input_image_url": image_url,
-        "image_size": "landscape_hd",
-        "guidance_scale": 5.0,
-        "num_inference_steps": 25,
-        "strength": 0.8,
-        "negative_prompt": "bad quality",
+        "lora": None,
     }
     configured_get_fal_result_mock.assert_called_once_with(
         request_id="req-test-456",
@@ -687,7 +679,7 @@ async def test_process_outpaint_success(
     assert submitted_fal_args["target_width"] == target_width
     assert submitted_fal_args["target_height"] == target_height
     assert submitted_fal_args["canvas_size"] == [target_width, target_height]
-    assert submitted_fal_args["num_outputs"] == 1
+    assert submitted_fal_args["num_images"] == 1
     assert submitted_fal_args["original_image_location"] == kwargs_for_job_params["original_image_location"]
     assert submitted_fal_args["original_image_size"] == kwargs_for_job_params["original_image_size"]
 
@@ -705,9 +697,8 @@ async def test_process_outpaint_success(
     expected_job_params_for_get_result_filtered = {
         k: v for k, v in expected_job_params_for_get_result.items() if v is not None
     }
-    # Remove num_images from the job_params dict if it's 1, as the client might not add it if it's the default
-    if expected_job_params_for_get_result_filtered.get("num_images") == 1:
-        pass  # num_images is passed to FAL as num_outputs, but might not be in job_params if default
+    # process_outpaint always appends "lora": lora_spec (or None) to job_params
+    expected_job_params_for_get_result_filtered["lora"] = None
 
     configured_get_fal_result_mock.assert_called_once_with(
         request_id=request_id,
@@ -756,24 +747,30 @@ async def test_process_outpaint_get_result_failure(
 
 @pytest.fixture
 def mock_fal_client(mocker: Mock) -> FalApiClient:
+    """Create a FalApiClient with _get_fal_result and _download_image_helper mocked.
+
+    _submit_fal_job and build_lora_arguments are NOT patched here so that the
+    dedicated mock_submit_job and mock_build_lora_arguments fixtures remain the
+    single source of truth for those mocks in tests that need to configure them.
+    """
     client = FalApiClient()
     mocker.patch.object(client, "_get_fal_result", new_callable=AsyncMock)
-    mocker.patch("twat_genai.engines.fal.client._submit_fal_job", new_callable=AsyncMock)
-    mocker.patch("twat_genai.engines.fal.lora.build_lora_arguments", new_callable=AsyncMock)
     mocker.patch("twat_genai.engines.fal.client._download_image_helper", new_callable=AsyncMock)
     return client
 
 
 @pytest.fixture
 def mock_build_lora_arguments(mocker: Mock) -> AsyncMock:
+    """Patch build_lora_arguments and return the mock so tests can configure it."""
     mock = mocker.patch("twat_genai.engines.fal.lora.build_lora_arguments", new_callable=AsyncMock)
     mock.return_value = ([], "test prompt")
     return mock
 
 
 @pytest.fixture
-def mock_submit_job() -> AsyncMock:
-    return AsyncMock()
+def mock_submit_job(mocker: Mock) -> AsyncMock:
+    """Patch _submit_fal_job and return the mock so tests can set return_value / side_effect."""
+    return mocker.patch("twat_genai.engines.fal.client._submit_fal_job", new_callable=AsyncMock)
 
 
 @pytest.fixture
@@ -832,27 +829,22 @@ async def test_process_tti_success(
         filename_prefix="test",
         **kwargs,
     )
-    mock_build_lora_arguments.assert_called_once_with(lora_spec, prompt)
+    # lora_spec=None: build_lora_arguments is skipped by _process_generic
+    mock_build_lora_arguments.assert_not_called()
+    # image_size="square_hd" is a plain string — _process_generic only converts
+    # ImageSizeWH / ImageSizes instances to width/height, so no width/height here.
     expected_fal_args = {
-        "loras": [],
         "prompt": prompt,
-        "num_images": 1,
-        "output_format": "jpeg",
-        "enable_safety_checker": False,
-        "width": 1024,
-        "height": 1024,
         "guidance_scale": 7.0,
         "num_inference_steps": 30,
     }
     mock_submit_job.assert_called_once_with(ModelTypes.TEXT.value, expected_fal_args)
+    # kwargs are popped from the dict before job_params is built, so they don't appear there.
     expected_job_params = {
         "model": ModelTypes.TEXT.value,
         "prompt": prompt,
-        "lora_spec": lora_spec,
-        "image_size": "square_hd",
-        "guidance_scale": 7.0,
-        "num_inference_steps": 30,
         "input_image_url": None,
+        "lora": None,
     }
     configured_get_fal_result_mock.assert_called_once_with(
         request_id="req-test-123",

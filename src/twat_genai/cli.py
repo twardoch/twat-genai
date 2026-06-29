@@ -36,7 +36,15 @@ UPSCALE_TOOL_MAP = {
 
 
 def parse_image_size(size_str: str) -> ImageSizes | ImageSizeWH:
-    """Parse image size string into appropriate type."""
+    """Parse image size string into appropriate type.
+
+    Accepts either a named preset (e.g. 'SQ', 'HD') or a custom 'width,height'
+    integer pair (e.g. '1024,768').  Using 'x' as a separator (e.g. '1024x768')
+    is intentionally rejected with a helpful message so the caller knows the
+    correct format.
+    """
+    import re
+
     try:
         return ImageSizes[size_str.upper()]
     except KeyError:
@@ -47,6 +55,10 @@ def parse_image_size(size_str: str) -> ImageSizes | ImageSizeWH:
             except (ValueError, TypeError) as err:
                 msg = "For custom image sizes use 'width,height' with integers."
                 raise ValueError(msg) from err
+        # Detect "NxM" format (wrong separator) and give a targeted hint
+        if re.match(r"^\d+[xX]\d+$", size_str):
+            msg = "For custom image sizes use 'width,height' with integers (e.g. '1024,768'), not 'WxH'."
+            raise ValueError(msg) from None
         valid_names = ", ".join(s.name for s in ImageSizes)
         msg = f"image_size must be one of: {valid_names} or in 'width,height' format."
         raise ValueError(msg) from None
